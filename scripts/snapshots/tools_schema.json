@@ -1,0 +1,3771 @@
+{
+  "prompts": {
+    "analisar_contratacao_pncp": {
+      "arguments": [
+        {
+          "description": "CNPJ do órgão que publicou a contratação (14 dígitos).\n\nProvide as a JSON string matching the following schema: {\"description\":\"CNPJ do \\u00f3rg\\u00e3o que publicou a contrata\\u00e7\\u00e3o (14 d\\u00edgitos).\",\"type\":\"string\"}",
+          "name": "cnpj_orgao",
+          "required": true
+        },
+        {
+          "description": "Ano da contratação (ex.: 2025).\n\nProvide as a JSON string matching the following schema: {\"description\":\"Ano da contrata\\u00e7\\u00e3o (ex.: 2025).\",\"type\":\"integer\"}",
+          "name": "ano",
+          "required": true
+        },
+        {
+          "description": "Sequencial da contratação no órgão (ex.: 12345).\n\nProvide as a JSON string matching the following schema: {\"description\":\"Sequencial da contrata\\u00e7\\u00e3o no \\u00f3rg\\u00e3o (ex.: 12345).\",\"type\":\"integer\"}",
+          "name": "sequencial",
+          "required": true
+        }
+      ],
+      "description": "Produz um checklist de viabilidade para uma contratação publicada no PNCP: resumo do objeto, valor, prazos, itens críticos, documentos do edital, riscos. Combina compras_pncp_contratacao_itens + compras_pncp_contratacao_item_resultados."
+    },
+    "dossie_due_diligence_fornecedor": {
+      "arguments": [
+        {
+          "description": "CNPJ do fornecedor (14 dígitos, com ou sem pontuação).\n\nProvide as a JSON string matching the following schema: {\"description\":\"CNPJ do fornecedor (14 d\\u00edgitos, com ou sem pontua\\u00e7\\u00e3o).\",\"type\":\"string\"}",
+          "name": "cnpj",
+          "required": true
+        },
+        {
+          "description": "Código do órgão para listar contratos do fornecedor naquele órgão. Se omitido, o passo de listagem de contratos é pulado.\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"C\\u00f3digo do \\u00f3rg\\u00e3o para listar contratos do fornecedor naquele \\u00f3rg\\u00e3o. Se omitido, o passo de listagem de contratos \\u00e9 pulado.\"}",
+          "name": "codigo_orgao_contratos",
+          "required": false
+        }
+      ],
+      "description": "Dossiê completo de due diligence de um fornecedor: cadastro, sanções (CEIS/CNEP/CEPIM/CEAF + leniência), impedimentos, e contratos quando houver órgão informado. Combina compras_perfil_fornecedor_completo + compras_fornecedor_contratos_por_item."
+    },
+    "montar_etp_pesquisa_precos": {
+      "arguments": [
+        {
+          "description": "Código CATMAT do material (use este OU codigo_catser).\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"C\\u00f3digo CATMAT do material (use este OU codigo_catser).\"}",
+          "name": "codigo_catmat",
+          "required": false
+        },
+        {
+          "description": "Código CATSER do serviço (use este OU codigo_catmat).\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"C\\u00f3digo CATSER do servi\\u00e7o (use este OU codigo_catmat).\"}",
+          "name": "codigo_catser",
+          "required": false
+        },
+        {
+          "description": "Descrição livre do objeto/serviço como aparecerá no TR. Usado no relatório final.\n\nProvide as a JSON string matching the following schema: {\"description\":\"Descri\\u00e7\\u00e3o livre do objeto/servi\\u00e7o como aparecer\\u00e1 no TR. Usado no relat\\u00f3rio final.\",\"minLength\":5,\"type\":\"string\"}",
+          "name": "descricao_objeto",
+          "required": false
+        },
+        {
+          "description": "Quantidade total prevista (para cálculo de valor estimado).\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"minimum\":0,\"type\":\"number\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"Quantidade total prevista (para c\\u00e1lculo de valor estimado).\"}",
+          "name": "quantidade_estimada",
+          "required": false
+        },
+        {
+          "description": "Janela em meses para buscar preços.\n\nProvide as a JSON string matching the following schema: {\"default\":12,\"description\":\"Janela em meses para buscar pre\\u00e7os.\",\"maximum\":24,\"minimum\":3,\"type\":\"integer\"}",
+          "name": "janela_meses",
+          "required": false
+        }
+      ],
+      "description": "Monta a seção de pesquisa de preços de um ETP no padrão IN SEGES/ME 65/2021: pelo menos 3 fontes, estatística descritiva, descarte de outliers (IQR), justificativa metodológica. Usa compras_pesquisar_precos_para_etp."
+    },
+    "oportunidades_carona_arp": {
+      "arguments": [
+        {
+          "description": "Termo de busca (ex.: 'notebook', 'uniformes', 'limpeza').\n\nProvide as a JSON string matching the following schema: {\"description\":\"Termo de busca (ex.: 'notebook', 'uniformes', 'limpeza').\",\"type\":\"string\"}",
+          "name": "palavra_chave",
+          "required": true
+        },
+        {
+          "description": "Filtro opcional de UF do órgão gerenciador (sigla 2 letras).\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"maxLength\":2,\"minLength\":2,\"type\":\"string\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"Filtro opcional de UF do \\u00f3rg\\u00e3o gerenciador (sigla 2 letras).\"}",
+          "name": "uf",
+          "required": false
+        },
+        {
+          "description": "Se True, filtra atas com vigência ainda aberta (fim_vigencia >= hoje).\n\nProvide as a JSON string matching the following schema: {\"default\":true,\"description\":\"Se True, filtra atas com vig\\u00eancia ainda aberta (fim_vigencia >= hoje).\",\"type\":\"boolean\"}",
+          "name": "apenas_vigentes",
+          "required": false
+        }
+      ],
+      "description": "Encontra atas de registro de preço vigentes com saldo disponível para carona — oportunidade para órgãos que querem aderir e para fornecedores que já são vencedores. Combina compras_arp_listar + compras_arp_saldo_item."
+    },
+    "panorama_orgao_360": {
+      "arguments": [
+        {
+          "description": "Código SIORG/UASG do órgão OU CNPJ (14 dígitos). Quando souber só o CNPJ, use o CNPJ; quando souber o código SIORG, use ele.\n\nProvide as a JSON string matching the following schema: {\"description\":\"C\\u00f3digo SIORG/UASG do \\u00f3rg\\u00e3o OU CNPJ (14 d\\u00edgitos). Quando souber s\\u00f3 o CNPJ, use o CNPJ; quando souber o c\\u00f3digo SIORG, use ele.\",\"type\":\"string\"}",
+          "name": "codigo_orgao",
+          "required": true
+        },
+        {
+          "description": "Área temática opcional (ex.: 'TI', 'obras', 'saúde').\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"\\u00c1rea tem\\u00e1tica opcional (ex.: 'TI', 'obras', 'sa\\u00fade').\"}",
+          "name": "foco",
+          "required": false
+        }
+      ],
+      "description": "Perfil 360° de um órgão público comprador: identificação, contratações publicadas no último ano, principais fornecedores, PCA do ano corrente. Combina compras_orgao_consultar + compras_pncp_contratacao_por_orgao + compras_pncp_pca_por_usuario."
+    },
+    "tendencia_contratacoes_periodo": {
+      "arguments": [
+        {
+          "description": "Data inicial da janela (YYYY-MM-DD).\n\nProvide as a JSON string matching the following schema: {\"description\":\"Data inicial da janela (YYYY-MM-DD).\",\"type\":\"string\"}",
+          "name": "data_inicial",
+          "required": true
+        },
+        {
+          "description": "Data final da janela (YYYY-MM-DD).\n\nProvide as a JSON string matching the following schema: {\"description\":\"Data final da janela (YYYY-MM-DD).\",\"type\":\"string\"}",
+          "name": "data_final",
+          "required": true
+        },
+        {
+          "description": "Modalidade PNCP. Comuns: 6=Pregão Eletrônico, 8=Dispensa, 4=Concorrência Eletrônica.\n\nProvide as a JSON string matching the following schema: {\"description\":\"Modalidade PNCP. Comuns: 6=Preg\\u00e3o Eletr\\u00f4nico, 8=Dispensa, 4=Concorr\\u00eancia Eletr\\u00f4nica.\",\"type\":\"integer\"}",
+          "name": "codigo_modalidade",
+          "required": false
+        },
+        {
+          "description": "UF opcional.\n\nProvide as a JSON string matching the following schema: {\"anyOf\":[{\"maxLength\":2,\"minLength\":2,\"type\":\"string\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"UF opcional.\"}",
+          "name": "uf",
+          "required": false
+        },
+        {
+          "description": "Se True, compara a janela atual com a janela imediatamente anterior de mesmo tamanho (delta absoluto + percentual).\n\nProvide as a JSON string matching the following schema: {\"default\":false,\"description\":\"Se True, compara a janela atual com a janela imediatamente anterior de mesmo tamanho (delta absoluto + percentual).\",\"type\":\"boolean\"}",
+          "name": "comparar_com_periodo_anterior",
+          "required": false
+        }
+      ],
+      "description": "Analisa tendência de contratações públicas em um intervalo, com bucketing temporal (mês/trimestre/ano) e opcionalmente comparação A vs B. Usa compras_aggregate_contratacoes_por_periodo + compras_comparar_periodos_contratacoes."
+    }
+  },
+  "resources": {
+    "compras://glossario/lei-14133": {
+      "description": "Cheat-sheet textual de conceitos centrais da Lei 14.133/2021 (ETP, TR, modalidades, SRP, sanções) e do ecossistema de dados (CATMAT, UASG, formatos de data). Útil como contexto inicial para o LLM.",
+      "mime_type": "text/markdown",
+      "name": "Glossário Lei 14.133/2021 + ecossistema Compras"
+    },
+    "compras://meta/escopo": {
+      "description": "O que este servidor expõe, o que ele faz além de consultar APIs, e o que ele explicitamente não faz.",
+      "mime_type": "text/markdown",
+      "name": "Escopo do compras-mcp"
+    },
+    "compras://referencia/criterios-julgamento": {
+      "description": "Códigos de critério de julgamento expostos pelo PNCP, conforme art. 33 da Lei 14.133/2021.",
+      "mime_type": "application/json",
+      "name": "Critérios de julgamento (Lei 14.133)"
+    },
+    "compras://referencia/esferas-federativas": {
+      "description": "Códigos de esfera (`esferaId`) usados pelo PNCP para classificar órgãos. F=Federal, E=Estadual, M=Municipal, D=Distrital. Usado pelo filtro `esfera` das listagens.",
+      "mime_type": "application/json",
+      "name": "Esferas federativas (PNCP)"
+    },
+    "compras://referencia/modalidades-pncp": {
+      "description": "Tabela de referência dos códigos de modalidade aceitos pelo PNCP. Use antes de chamar tools que exigem `codigo_modalidade`.",
+      "mime_type": "application/json",
+      "name": "Modalidades de contratação (PNCP / Lei 14.133)"
+    },
+    "compras://referencia/situacoes-contratacao": {
+      "description": "Códigos de situação que aparecem em `situacaoCompraId`.",
+      "mime_type": "application/json",
+      "name": "Situações da contratação (PNCP)"
+    }
+  },
+  "tools": {
+    "compras_aggregate_contratacoes_por_periodo": {
+      "description": "Série temporal de contratações no PNCP por bucket.\n\n**Modo `count` (recomendado para tendência)**: 1 chamada por bucket\nlendo apenas `totalRegistros`. Janelas grandes (até 5 anos) são viáveis.\n\n**Modo `valor_*`**: varre todas as páginas de cada bucket para somar.\nMais lento; limita-se a `MAX_PAGES_PER_BUCKET=25` páginas (× 500 itens =\n12.500 registros máx por bucket). Sinaliza `truncado=true` quando bate\no teto.\n\nConcurrency interna: 4 calls simultâneas. Cache 30 min.",
+      "parameters": {
+        "properties": {
+          "codigo_modalidade": {
+            "description": "Modalidade PNCP a agregar. Comuns: 6=Pregão Eletrônico, 8=Dispensa, 9=Inexigibilidade, 4=Concorrência Eletrônica.",
+            "type": "integer"
+          },
+          "data_final": {
+            "description": "Data final da janela de agregação (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial": {
+            "description": "Data inicial da janela de agregação (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "esfera": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro de esfera (federal/estadual/municipal/distrital). Só tem efeito no modo 'valor_*' (precisa varrer páginas)."
+          },
+          "granularidade": {
+            "default": "mes",
+            "description": "Tamanho de cada bucket da série: 'dia', 'semana', 'mes' ou 'ano'.",
+            "enum": [
+              "dia",
+              "semana",
+              "mes",
+              "ano"
+            ],
+            "type": "string"
+          },
+          "metrica": {
+            "default": "count",
+            "description": "Métrica a calcular: 'count' (rápido, 1 call por bucket), 'valor_estimado' ou 'valor_homologado' (paginado, mais lento). Use 'count' para tendência pura; só ative valores quando necessário.",
+            "enum": [
+              "count",
+              "valor_estimado",
+              "valor_homologado"
+            ],
+            "type": "string"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UF opcional."
+          }
+        },
+        "required": [
+          "data_inicial",
+          "data_final",
+          "codigo_modalidade"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_adesoes_item": {
+      "description": "Lista adesões (caronas) já realizadas a uma ARP.\n\nEndpoint Dados Abertos `/modulo-arp/5_consultarAdesoesItem`. Mostra\nquem aderiu e com que quantidade — indica nível de demanda e quanto\nainda resta no limite legal de adesões.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "numero_ata": {
+            "description": "Número simples da ata (ex.: '00001/2024').",
+            "type": "string"
+          },
+          "numero_item": {
+            "description": "Número do item dentro da ata.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "unidade_gerenciadora": {
+            "description": "Código da UASG gerenciadora da ata.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "numero_ata",
+          "unidade_gerenciadora",
+          "numero_item"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_buscar_por_objeto": {
+      "description": "Busca ARPs vigentes cujo `objeto` contém uma palavra-chave.\n\nResolve a limitação do endpoint `/modulo-arp/1.2_consultarARP_FimVigencia`,\nque não aceita filtro por texto: pagina internamente até `max_paginas_varridas`\ne filtra client-side por presença de `palavra_chave` (case-insensitive,\ncom normalização de acentos). Curto-circuita quando atinge `max_resultados`.\n\nO servidor faz o trabalho que antes era pedido ao LLM — sem isso, o\nroteiro `oportunidades_carona_arp` esbarrava em 169k ARPs vigentes e\n339 páginas. Achado da bateria A v0.3.5.\n\n**Limitação conhecida**: o schema upstream de ARP **não traz UF** no\nitem — só `nomeOrgao` e `nomeUnidadeGerenciadora`. Para filtrar por\nUF, cruze os matches com `compras_uasg_consultar` usando\n`codigoUnidadeGerenciadora` e compare `unidade.uf`. Não tentamos esse\ncruzamento aqui para manter a tool barata e previsível.\n\nOutput:\n    {\n      \"resultado\": [<ARPs que casaram>],\n      \"total_examinadas\": int,\n      \"matches\": int,\n      \"paginas_varridas\": int,\n      \"curto_circuitou\": bool,\n      \"_filtro_objeto\": {...}\n    }\n\nCache 15 min por (palavra_chave + janela + caps).",
+      "parameters": {
+        "properties": {
+          "data_vigencia_final_max": {
+            "description": "Limite máximo do fim de vigência (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_final_min": {
+            "description": "Limite mínimo do fim de vigência (YYYY-MM-DD). Tipicamente hoje para 'apenas vigentes'.",
+            "format": "date",
+            "type": "string"
+          },
+          "max_paginas_varridas": {
+            "default": 10,
+            "description": "Quantas páginas do upstream serão varridas para encontrar matches (proteção de latência). Default 10 × 500 itens = até 5.000 ARPs examinadas. Cap em 50.",
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_resultados": {
+            "default": 20,
+            "description": "Quantos matches no máximo retornar (curto-circuita a varredura).",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "palavra_chave": {
+            "description": "Termo a procurar no campo `objetoCompra` das ARPs (case-insensitive, com normalização básica de acentos). Exemplos: 'notebook', 'uniformes', 'limpeza'.",
+            "minLength": 3,
+            "type": "string"
+          }
+        },
+        "required": [
+          "palavra_chave",
+          "data_vigencia_final_min",
+          "data_vigencia_final_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_consultar": {
+      "description": "Consulta uma ARP específica pelo identificador PNCP.\n\nEndpoint Dados Abertos `/modulo-arp/1.1_consultarARP_Id`. Devolve o\ncabeçalho completo da ata (vigência, modalidade, gerenciadora, valores).\n\nQuando o `numero_controle_pncp_ata` vem no formato de **compra** (sem\no sufixo `-NNNNNN` que numera a ata), a tool detecta e devolve\ndiagnóstico explícito em vez de propagar `encontrada=false` silencioso.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "numero_controle_pncp_ata": {
+            "description": "Identificador PNCP da **ata** (formato `cnpj14-1-sequencial/ano-NNNNNN`, onde NNNNNN numera a ata dentro da compra — compras SRP multi-fornecedor geram várias atas). Exemplo: `00394452000103-1-004729/2024-000006`. Retornado em `compras_arp_por_fim_vigencia` no campo `numeroControlePncpAta`. NÃO confundir com `numeroControlePncpCompra` (formato sem o sufixo).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "numero_controle_pncp_ata"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_itens_listar": {
+      "description": "Lista itens de ARPs na janela de vigência informada.\n\nEndpoint Dados Abertos `/modulo-arp/2_consultarARPItem`. O upstream\nexige `dataVigenciaInicialMin/Max` (janela ≤365 dias). Use filtros\nopcionais para localizar atas com um item específico.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_item": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra por código CATMAT ou CATSER."
+          },
+          "codigo_unidade_gerenciadora": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UASG gerenciadora (opcional)."
+          },
+          "data_vigencia_inicial_max": {
+            "description": "Data máxima de início de vigência (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_inicial_min": {
+            "description": "Data mínima de início de vigência (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "ni_fornecedor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CPF/CNPJ do fornecedor (apenas dígitos)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "tipo_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Tipo do item: 'M' (material) ou 'S' (serviço)."
+          }
+        },
+        "required": [
+          "data_vigencia_inicial_min",
+          "data_vigencia_inicial_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_listar": {
+      "description": "Lista Atas de Registro de Preço (ARPs) por janela de início de vigência.\n\nEndpoint Dados Abertos `/modulo-arp/1_consultarARP`. O upstream exige\njanela `dataVigenciaInicialMin/Max` (≤ 365 dias). Para listar atas\npróximas do vencimento, use `compras_arp_por_fim_vigencia`.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_modalidade_compra": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra por modalidade da compra que originou a ata."
+          },
+          "codigo_unidade_gerenciadora": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra ARPs pela UASG gerenciadora (5-6 dígitos)."
+          },
+          "data_vigencia_inicial_max": {
+            "description": "Data MÁXIMA do início da vigência da ata (YYYY-MM-DD). Obrigatório. Janela max ≤ 365 dias a partir de data_vigencia_inicial_min.",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_inicial_min": {
+            "description": "Data MÍNIMA do início da vigência da ata (YYYY-MM-DD). Obrigatório. A janela entre min e max deve ser de no máximo 365 dias.",
+            "format": "date",
+            "type": "string"
+          },
+          "numero_ata_registro_preco": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra por número da ata (ex.: '00001/2024')."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_vigencia_inicial_min",
+          "data_vigencia_inicial_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_por_fim_vigencia": {
+      "description": "Lista ARPs cuja vigência termina dentro do intervalo informado.\n\nEndpoint Dados Abertos `/modulo-arp/1.2_consultarARP_FimVigencia`.\nPermite ao gestor identificar atas próximas do vencimento.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_unidade_gerenciadora": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UASG gerenciadora (opcional)."
+          },
+          "data_vigencia_final_max": {
+            "description": "Data MÁXIMA de fim de vigência (YYYY-MM-DD). Obrigatório.",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_final_min": {
+            "description": "Data MÍNIMA de fim de vigência (YYYY-MM-DD). Obrigatório. Janela max ≤ 365 dias.",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_vigencia_final_min",
+          "data_vigencia_final_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_saldo_item": {
+      "description": "Devolve o **saldo** (quantidade ainda disponível) por item da ARP.\n\nEndpoint Dados Abertos `/modulo-arp/4_consultarEmpenhosSaldoItem`.\n**Crítico para adesão**: a ata pode estar vigente mas com saldo\nzerado. Sem saldo, não há como aderir.\n\n**Estrutura do payload**: o upstream retorna **1 linha por\n(numeroItem, unidade, tipo)** — onde `tipo` pode ser `GERENCIADORA`,\n`PARTICIPANTE` etc. O mesmo `numeroItem` aparece várias vezes quando\nhá múltiplas unidades alocadas (carona ou rateio). **Não é\nduplicação** — são alocações distintas dentro da mesma ata.\n\nPara evitar confusão (achado bateria A v0.3.5), além do `resultado`\ncru, anexamos `resumo_por_item`: dicionário agregando por\n`numeroItem` com soma das quantidades registradas/empenhadas e\nsaldo total — pronto para decisão de adesão.\n\nCache 15 min (saldo muda ao longo do dia).",
+      "parameters": {
+        "properties": {
+          "numero_ata": {
+            "description": "Número simples da ata (ex.: '00001/2024').",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "unidade_gerenciadora": {
+            "description": "Código da UASG gerenciadora da ata.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "numero_ata",
+          "unidade_gerenciadora"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_arp_unidades_item": {
+      "description": "Lista UGs participantes (potenciais caronas) de um item da ARP.\n\nEndpoint Dados Abertos `/modulo-arp/3_consultarUnidadesItem`. Determina\nquais unidades podem usar a ata como carona (adesão).\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "numero_ata": {
+            "description": "Número simples da ata (ex.: '00001/2024'). Distinto do `numeroControlePncpAta` — use o campo retornado em `compras_arp_listar` ou `compras_arp_itens_listar`.",
+            "type": "string"
+          },
+          "numero_item": {
+            "description": "Número do item dentro da ata.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "unidade_gerenciadora": {
+            "description": "Código da UASG gerenciadora da ata.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "numero_ata",
+          "unidade_gerenciadora",
+          "numero_item"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_buscar_contratacoes_similares": {
+      "description": "Federa Dados Abertos + PNCP buscando contratações similares.\n\nComposição: consulta resultados homologados (Dados Abertos 14.133) +\npublicações PNCP filtrando pelo CATMAT/CATSER do item alvo, deduplica\npor CNPJ órgão + ano + sequencial e devolve os `max_resultados` mais\nrecentes. Insumo para mapear benchmarks de outros órgãos.\n\n**Atenção latência**: chama o PNCP em 3 modalidades (Pregão, Dispensa,\nConcorrência) em paralelo. Cada chamada PNCP costuma levar 30-60s — o\ntempo total da composta tende a 60-90s quando o cache está frio. Com\nRedis configurado as chamadas seguintes voltam em <1s.",
+      "parameters": {
+        "properties": {
+          "codigo_catmat": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código CATMAT do item. Mutuamente exclusivo com codigo_catser."
+          },
+          "codigo_catser": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código CATSER do serviço. Mutuamente exclusivo com codigo_catmat."
+          },
+          "max_resultados": {
+            "default": 20,
+            "description": "Máximo de contratações similares a retornar (deduplicadas).",
+            "type": "integer"
+          },
+          "periodo_meses": {
+            "default": 12,
+            "description": "Janela de busca em meses contados de hoje para trás.",
+            "type": "integer"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro opcional por UF."
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_catmat_buscar": {
+      "description": "Busca itens CATMAT.\n\n**⚠️ Atenção upstream**: o filtro textual `descricao` do Dados Abertos\nestá ignorando o valor enviado e devolvendo o universo CATMAT inteiro\n(~340k itens, começando por arma de fogo) desde meados de 2026.\nConfirmado via probe direto. Os filtros estruturais (`codigo_grupo`,\n`codigo_classe`, `codigo_pdm`) continuam funcionando.\n\n**Workflow recomendado enquanto o filtro textual não voltar**:\n1. `compras_catmat_listar_grupos()` → escolher o grupo (ex.: 71=Mobiliários).\n2. `compras_catmat_listar_classes(codigo_grupo=71)` → escolher a classe\n   (ex.: 7110=Mobiliário para Escritório).\n3. `compras_catmat_buscar(termo='cadeira', codigo_grupo=71, codigo_classe=7110)`\n   → o `termo` ainda é enviado (mantém compatibilidade), mas a redução\n   real virá dos códigos estruturais.\n\nEsta tool emite `_aviso_filtro` no payload quando detecta que o upstream\ndevolveu o universo inteiro.\n\nCache 24h por (termo + filtros + página).",
+      "parameters": {
+        "properties": {
+          "codigo_classe": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro estrutural por classe CATMAT (4 dígitos). Use em conjunto com `codigo_grupo` para focar a busca."
+          },
+          "codigo_grupo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro estrutural por grupo CATMAT (1-99). **FORTEMENTE RECOMENDADO** porque o filtro textual upstream está quebrado (veja docstring). Obtenha o código em `compras_catmat_listar_grupos`."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          },
+          "termo": {
+            "description": "Termo de busca textual (descrição do material/serviço). Aceita fragmento — a API faz match parcial. Ex.: 'cadeira ergonomica'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "termo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_catmat_consultar": {
+      "description": "Consulta detalhes de um item CATMAT específico pelo código.\n\nDevolve nome do item, PDM, grupo, classe, características, NCM e\nunidades de fornecimento. Útil para confirmar o código antes de\nfazer pesquisa de preços ou listar contratações similares.\n\nCache de 24h.",
+      "parameters": {
+        "properties": {
+          "codigo_item": {
+            "description": "Código numérico do item no CATMAT (Catálogo de Materiais). Inteiro de 4 a 8 dígitos. Exemplo: 460789.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_item"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_catmat_listar_classes": {
+      "description": "Lista as classes do CATMAT, opcionalmente filtradas por grupo.\n\nClasses são o segundo nível da hierarquia (ex.: dentro do grupo 71\nMobiliário, a classe 7110 é \"Mobiliário de escritório\").\n\nCache de 24h.",
+      "parameters": {
+        "properties": {
+          "codigo_grupo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Restringe a classes pertencentes a este grupo CATMAT. Se omitido, lista classes de todos os grupos."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_catmat_listar_grupos": {
+      "description": "Lista os grupos do CATMAT (Catálogo de Materiais).\n\nGrupos são o nível mais alto da hierarquia CATMAT (ex.: 10=ARMAMENTO,\n11=MATERIAIS BÉLICOS NUCLEARES). Use esta tool para enquadrar a\ncontratação no grupo correto antes de descer para classes/PDM/itens.\n\nCache de 24h: os grupos mudam muito raramente. Total atual ~79 grupos.",
+      "parameters": {
+        "properties": {
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_catser_consultar": {
+      "description": "Consulta detalhes de um item CATSER pelo código.\n\nDevolve nome do serviço, descrição, seção/divisão/grupo/classe e\nunidades de medida. Use para confirmar o código antes de pesquisar\npreços ou contratações similares.\n\nCache de 24h.",
+      "parameters": {
+        "properties": {
+          "codigo_item": {
+            "description": "Código numérico do item no CATSER (Catálogo de Serviços). Inteiro de 4 a 6 dígitos. Exemplo: 27332.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_item"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_catser_listar_classes": {
+      "description": "Lista as classes CATSER, opcionalmente filtradas por grupo.\n\nCache de 24h.",
+      "parameters": {
+        "properties": {
+          "codigo_grupo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Restringe a classes do grupo CATSER informado."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_catser_listar_secoes": {
+      "description": "Lista as seções do CATSER (Catálogo de Serviços).\n\nSeções são o nível mais alto da hierarquia CATSER (baseada no CPC ONU).\nUse para enquadrar a contratação de serviços em uma seção antes de\ndescer para divisões/grupos/classes/itens.\n\nCache de 24h.",
+      "parameters": {
+        "properties": {
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_checar_sancoes_fornecedor": {
+      "description": "Consolida sanções de um fornecedor (CEIS + CNEP + CEPIM + leniência + impedimentos).\n\nComposição: chama em paralelo as listas do Portal da Transparência e os\nimpedimentos do Comprasnet. Retorna um veredito booleano + lista\nconsolidada de sanções ativas.\n\nLevanta `ComprasAuthError` se `TRANSPARENCIA_API_KEY` não estiver configurada.\nSempre use antes de homologar pregões/contratos. Cache 10 min.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "description": "CNPJ do fornecedor (14 dígitos, com ou sem pontuação).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cnpj"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_comparar_periodos_contratacoes": {
+      "description": "Compara dois períodos lado a lado para a mesma modalidade.\n\nWrapper sobre `compras_aggregate_contratacoes_por_periodo` chamado duas\nvezes (granularidade='ano' implícita — soma todo o período em 1 bucket).\n\nRetorna totais de A e B + delta absoluto + delta percentual.\n\nCaso de uso típico: _\"Houve antecipação de licitações em Jun/2024 (ano\neleitoral) comparado a Jun/2025?\"_ Ou _\"As dispensas em Dez/2024 foram\nmaiores que Dez/2023 no mesmo órgão?\"_.",
+      "parameters": {
+        "properties": {
+          "codigo_modalidade": {
+            "description": "Modalidade PNCP a comparar. Comuns: 6=Pregão Eletrônico, 8=Dispensa, 4=Concorrência Eletrônica.",
+            "type": "integer"
+          },
+          "esfera": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Esfera federativa. Requer métrica de valor (modo paginado)."
+          },
+          "label_a": {
+            "default": "Periodo A",
+            "description": "Rótulo amigável do período A (ex.: 'Jun/2024').",
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "label_b": {
+            "default": "Periodo B",
+            "description": "Rótulo amigável do período B (ex.: 'Jun/2025').",
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "metrica": {
+            "default": "count",
+            "description": "Métrica a comparar: 'count' (rápido) ou 'valor_estimado' / 'valor_homologado' (paginado).",
+            "enum": [
+              "count",
+              "valor_estimado",
+              "valor_homologado"
+            ],
+            "type": "string"
+          },
+          "periodo_a_fim": {
+            "description": "Data final do período A (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "periodo_a_inicio": {
+            "description": "Data inicial do período A (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "periodo_b_fim": {
+            "description": "Data final do período B (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "periodo_b_inicio": {
+            "description": "Data inicial do período B (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UF opcional."
+          }
+        },
+        "required": [
+          "periodo_a_inicio",
+          "periodo_a_fim",
+          "periodo_b_inicio",
+          "periodo_b_fim",
+          "codigo_modalidade"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratacoes_14133_consultar": {
+      "description": "Consulta uma contratação 14.133 pelo id interno.\n\nEndpoint `/modulo-contratacoes/1.1_consultarContratacoes_PNCP_14133_Id`.\nDevolve detalhes completos: objeto, valor estimado, modalidade,\ninstrumento convocatório, status no PNCP.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contratacao": {
+            "description": "Identificador interno da contratação (campo `id` retornado em listar_contratacoes_14133).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contratacao"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratacoes_14133_itens_listar": {
+      "description": "Lista itens de contratações 14.133 incluídos no período.\n\nEndpoint `/modulo-contratacoes/2_consultarItensContratacoes_PNCP_14133`.\nÚtil para descobrir o que foi licitado em uma janela específica.",
+      "parameters": {
+        "properties": {
+          "data_final_inclusao": {
+            "description": "Data final de inclusão dos itens (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial_inclusao": {
+            "description": "Data inicial de inclusão dos itens no PNCP (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_inicial_inclusao",
+          "data_final_inclusao"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratacoes_14133_itens_por_contratacao": {
+      "description": "Lista itens de uma contratação 14.133 específica.\n\nEndpoint `/modulo-contratacoes/2.1_consultarItensContratacoes_PNCP_14133_Id`.",
+      "parameters": {
+        "properties": {
+          "id_contratacao": {
+            "description": "Identificador interno da contratação (campo `id` retornado em listar_contratacoes_14133).",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contratacao"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratacoes_14133_listar": {
+      "description": "Lista contratações da Lei 14.133 publicadas no PNCP (via Dados Abertos).\n\nEndpoint `/modulo-contratacoes/1_consultarContratacoes_PNCP_14133`.\nCobre pregões eletrônicos, dispensas, inexigibilidades e demais\nmodalidades da Nova Lei de Licitações no governo federal.\n\n**Atenção semântica**: o filtro `codigo_modalidade_dados_abertos` usa a\ntabela de modalidade do SIASG/Dados Abertos, NÃO o cheat sheet PNCP de\n`compras_pncp_modalidades`. Os payloads retornam ambos os campos\n(`codigoModalidade` do Dados Abertos e `modalidadeIdPncp` do PNCP) — use\n`modalidadeNome` para o nome amigável.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "cnpj_orgao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do órgão (14 dígitos, com ou sem pontuação)."
+          },
+          "codigo_modalidade_dados_abertos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código de modalidade na tabela do **Dados Abertos / SIASG** (NÃO é o cheat sheet do PNCP). Equivalências confirmadas em 2026-05 por sweep empírico do endpoint:\n  3 = Concorrência Eletrônica (PNCP=4)\n  5 = Pregão Eletrônico (PNCP=6)\n  6 = Dispensa (PNCP=8)\n  7 = Inexigibilidade (PNCP=9)\nDemais códigos (1,2,4,8-13) retornam vazio neste endpoint. Para consultar usando o cheat sheet PNCP nativo, use `compras_pncp_contratacoes_publicacao`."
+          },
+          "codigo_uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG do órgão licitante."
+          },
+          "data_final_publicacao": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data final de publicação (YYYY-MM-DD)."
+          },
+          "data_inicial_publicacao": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data inicial de publicação (YYYY-MM-DD)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_contratacoes_14133_resultados_listar": {
+      "description": "Lista resultados (homologações) de itens 14.133 no período.\n\nEndpoint `/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133`.\nDevolve fornecedor vencedor, valor adjudicado e quantitativo homologado —\nfonte primária de preço praticado para o ETP.",
+      "parameters": {
+        "properties": {
+          "data_final_resultado": {
+            "description": "Data final do resultado/homologação (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial_resultado": {
+            "description": "Data inicial do resultado/homologação (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_inicial_resultado",
+          "data_final_resultado"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratacoes_14133_resultados_por_contratacao": {
+      "description": "Lista resultados de uma contratação 14.133 específica.",
+      "parameters": {
+        "properties": {
+          "id_contratacao": {
+            "description": "Identificador interno da contratação (campo `id` retornado em listar_contratacoes_14133).",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contratacao"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_comprasnet_consultar": {
+      "description": "Consulta detalhe completo de um contrato no Comprasnet (/api/contrato/id/{id}).\n\nDevolve contrato com sub-recursos embutidos. CPFs mascarados por LGPD.\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID interno do contrato no Comprasnet (pode ser diferente do id no Dados Abertos). Obtenha em `compras_contrato_comprasnet_por_uasg`.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_comprasnet_por_uasg": {
+      "description": "Lista contratos de uma UASG no Comprasnet.\n\n**Atenção**: o upstream `/api/contrato/ug/{uasg}` não suporta paginação —\ndevolve a lista completa em uma resposta única (pode passar de 1 MB). Esta\ntool fatia o resultado client-side conforme `pagina + tamanho_pagina` para\nevitar inundar o LLM.\n\nCache 15 min do payload completo; fatiamento por chamada é barato.",
+      "parameters": {
+        "properties": {
+          "ativos": {
+            "default": true,
+            "description": "Se True (padrão), lista apenas contratos ativos. Set False para incluir inativos via /api/contrato/inativo/ug/{uasg}.",
+            "type": "boolean"
+          },
+          "codigo_uasg": {
+            "description": "Código UASG (5-6 dígitos).",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_uasg"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_cronograma": {
+      "description": "Lista cronograma financeiro (/api/contrato/{id}/cronograma).\n\nPaginação client-side — alguns contratos têm 200+ entradas mensais.\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_empenhos": {
+      "description": "Lista empenhos do contrato (/api/contrato/{id}/empenhos).\n\nPaginação client-side. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_faturas": {
+      "description": "Lista NFs/faturas (/api/contrato/{id}/faturas).\n\nPaginação client-side. Cache 15 min. **Atenção LGPD**: o campo\n`infcomplementar` (texto livre) pode conter nome de servidor + matrícula\nSIAPE não estruturados — o mascaramento LGPD só cobre CPFs em campos\nnominais (cpf, niResponsavel, etc.).",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_garantias": {
+      "description": "Lista garantias contratuais (/api/contrato/{id}/garantias).\n\nPaginação client-side. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_historico_aditivos": {
+      "description": "Lista aditivos do contrato (/api/contrato/{id}/historico).\n\nPaginação client-side (upstream não pagina). Cache 15 min do payload completo.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_ocorrencias": {
+      "description": "Lista ocorrências/penalidades (/api/contrato/{id}/ocorrencias).\n\nIndicador-chave da confiabilidade do fornecedor. Paginação client-side.\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_publicacoes": {
+      "description": "Lista publicações DOU (/api/contrato/{id}/publicacoes).\n\nPaginação client-side. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contrato_responsaveis": {
+      "description": "Lista fiscais/gestores (/api/contrato/{id}/responsaveis).\n\nCPFs mascarados por LGPD (`123.***.***-45`). Paginação client-side. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "id_contrato": {
+            "description": "ID do contrato no Comprasnet.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id_contrato"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratos_consultar": {
+      "description": "Consulta um contrato no Dados Abertos (endpoint 1.1).\n\nO upstream exige `codigo + tipo`. Tipos aceitos pela API:\n`idCompra` e `numeroControlePncpContrato`.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo": {
+            "description": "Identificador do contrato no upstream — interpretação depende de `tipo`. Para tipo='idCompra' é o id da compra (string numérica). Para tipo='numeroControlePncpContrato' é o número de controle PNCP completo (ex.: '00000000000000-1-000001/2024').",
+            "type": "string"
+          },
+          "tipo": {
+            "default": "numeroControlePncpContrato",
+            "description": "Como interpretar `codigo`: 'idCompra' (id interno da compra) ou 'numeroControlePncpContrato' (identificador PNCP).",
+            "enum": [
+              "idCompra",
+              "numeroControlePncpContrato"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratos_itens_listar": {
+      "description": "Lista itens de contratos (endpoint 2).\n\nUpstream exige `codigoOrgao + dataVigenciaInicialMin/Max`. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_item": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código CATMAT ou CATSER (opcional)."
+          },
+          "codigo_orgao": {
+            "description": "Código do órgão (obrigatório).",
+            "type": "integer"
+          },
+          "data_vigencia_inicial_max": {
+            "description": "Data máxima de início de vigência (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_inicial_min": {
+            "description": "Data mínima de início de vigência (YYYY-MM-DD). Janela ≤ 365 dias.",
+            "format": "date",
+            "type": "string"
+          },
+          "ni_fornecedor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CPF/CNPJ do fornecedor."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "tipo_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Tipo do item: 'M' (material) ou 'S' (serviço)."
+          }
+        },
+        "required": [
+          "codigo_orgao",
+          "data_vigencia_inicial_min",
+          "data_vigencia_inicial_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratos_listar": {
+      "description": "Lista contratos federais (Dados Abertos /modulo-contratos/1).\n\nO upstream exige `codigoOrgao` + janela `dataVigenciaInicialMin/Max`\n(≤ 365 dias). Para sub-recursos detalhados (garantias, faturas,\nocorrências), use `compras_contrato_*` que consulta o Comprasnet.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_modalidade_compra": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modalidade da compra que originou o contrato."
+          },
+          "codigo_orgao": {
+            "description": "Código do órgão (obrigatório no upstream). Use `compras_orgao_listar` para descobrir.",
+            "type": "integer"
+          },
+          "codigo_unidade_gestora": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra pela UASG gestora do contrato."
+          },
+          "data_vigencia_inicial_max": {
+            "description": "Data MÁXIMA de início de vigência (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_inicial_min": {
+            "description": "Data MÍNIMA de início de vigência do contrato (YYYY-MM-DD). Janela max ≤ 365 dias até data_vigencia_inicial_max.",
+            "format": "date",
+            "type": "string"
+          },
+          "ni_fornecedor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CPF/CNPJ do fornecedor (apenas dígitos). Opcional."
+          },
+          "numero_contrato": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra por número do contrato (ex.: '00031/2015')."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_orgao",
+          "data_vigencia_inicial_min",
+          "data_vigencia_inicial_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_contratos_listar_por_fim_vigencia": {
+      "description": "Lista contratos com vencimento na janela informada (endpoint 1.2).\n\nInventário do que precisa renovar. Upstream exige `codigoOrgao` +\n`dataVigenciaFinalMin/Max` (≤ 365 dias). Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_orgao": {
+            "description": "Código do órgão (obrigatório).",
+            "type": "integer"
+          },
+          "codigo_unidade_gestora": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UASG gestora (opcional)."
+          },
+          "data_vigencia_final_max": {
+            "description": "Data MÁXIMA de fim de vigência (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_vigencia_final_min": {
+            "description": "Data MÍNIMA de fim de vigência (YYYY-MM-DD). Janela ≤ 365 dias.",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_orgao",
+          "data_vigencia_final_min",
+          "data_vigencia_final_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_detalhar_preco_material": {
+      "description": "Detalha unitários de cada compra individual de um item CATMAT no período.\n\nEndpoint: `/modulo-pesquisa-preco/2_consultarMaterialDetalhe`. Devolve\nlinha por COMPRA (idCompra + item) com o valor unitário homologado.\nIdeal para amostragem detalhada quando o agente precisa montar uma\ntabela para colar no ETP.",
+      "parameters": {
+        "properties": {
+          "codigo_item_catalogo": {
+            "description": "Código CATMAT do material. Inteiro 4-8 dígitos. Ex.: 460789.",
+            "type": "integer"
+          },
+          "data_fim": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data final da compra (YYYY-MM-DD). Quando omitida, a API usa a data atual."
+          },
+          "data_inicio": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data inicial da compra (YYYY-MM-DD). Quando omitida, a API usa o início do ano corrente."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_item_catalogo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_detalhar_preco_servico": {
+      "description": "Detalha unitários por compra individual de um serviço CATSER.\n\nEndpoint: `/modulo-pesquisa-preco/4_consultarServicoDetalhe`.",
+      "parameters": {
+        "properties": {
+          "codigo_item_catalogo": {
+            "description": "Código CATSER do serviço. Inteiro 4-6 dígitos. Ex.: 27332.",
+            "type": "integer"
+          },
+          "data_fim": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data final (YYYY-MM-DD)."
+          },
+          "data_inicio": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data inicial (YYYY-MM-DD)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_item_catalogo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_fornecedor_cnpj_receita": {
+      "description": "Dados públicos do CNPJ na Receita Federal (via BrasilAPI/MinhaReceita).\n\nRetorna razão social, nome fantasia, situação cadastral, CNAE primário e\nsecundários, QSA (sócios), capital social, natureza jurídica, porte,\nendereço e datas de início de atividade e da situação cadastral.\n\n**Quando usar**: complemento do `compras_perfil_fornecedor_completo`\npara due diligence (avaliar porte, sócios, CNAEs vs objeto da licitação).\nOs dados são da Receita; este MCP **não** consulta sanções aqui — para\nisso use as tools de sanção (CEIS/CNEP/CEPIM/CEAF).\n\nCache 24h. Em caso de 404 ou erro upstream, retorna `encontrado=false`\ncom diagnóstico em `_erro` em vez de propagar exception.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "description": "CNPJ a consultar (14 dígitos, com ou sem pontuação). Usa BrasilAPI por padrão; trocável via env `CNPJ_PROVIDER=minhareceita`.",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          }
+        },
+        "required": [
+          "cnpj"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_fornecedor_consultar": {
+      "description": "Consulta cadastro de um fornecedor pelo CNPJ ou CPF.\n\nEndpoint Dados Abertos `/modulo-fornecedor/1_consultarFornecedor`.\nDevolve razão social, CNAE, porte da empresa, natureza jurídica.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "cnpj_cpf": {
+            "description": "CNPJ (14 dígitos) ou CPF (11 dígitos) do fornecedor, com ou sem pontuação.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cnpj_cpf"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_fornecedor_contratos_por_item": {
+      "description": "Lista contratos e empenhos por itens (CATMAT/CATSER) no Comprasnet.\n\nEndpoint `POST /api/comprasnet/contratosempenhos`. Útil para descobrir\nquem fornece esses itens hoje no governo (potenciais participantes em\nnovos certames).\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "codigos_catmat": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Códigos CATMAT a buscar."
+          },
+          "codigos_catser": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Códigos CATSER a buscar."
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_fornecedor_impedimentos_por_itens": {
+      "description": "Consulta impedimentos no Comprasnet por lista de itens (CATMAT/CATSER).\n\nEndpoint `POST /api/comprasnet/compras/impedimentos`. Retorna fornecedores\nimpedidos de participar de contratações dos itens informados (sanções\naplicadas no SICAF). Essencial antes de homologar pregões eletrônicos.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "codigos_catmat": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Lista de códigos CATMAT (materiais) a verificar. Use junto com codigos_catser ou separadamente."
+          },
+          "codigos_catser": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Lista de códigos CATSER (serviços)."
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_fornecedor_listar": {
+      "description": "Lista fornecedores no Compras.gov.br com filtros estruturais.\n\nEndpoint Dados Abertos `/modulo-fornecedor/1_consultarFornecedor`. Use\npara mapear fornecedores potenciais por porte/CNAE — ex.: levantar\ntodas as MEs com CNAE de TI.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ativo": {
+            "default": true,
+            "description": "True (default) para listar apenas ativos, False para apenas inativos.",
+            "type": "boolean"
+          },
+          "cnpj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtrar por CNPJ (14 dígitos)."
+          },
+          "codigo_cnae": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código CNAE para filtrar por atividade."
+          },
+          "cpf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtrar por CPF (11 dígitos)."
+          },
+          "natureza_juridica": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código da natureza jurídica."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "porte_empresa": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código de porte da empresa (1=ME, 2=EPP, 3=Demais). Consulte os códigos no manual do Compras.gov.br."
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_indicadores_consolidados": {
+      "description": "Métricas operacionais consolidadas da API Dados Abertos.\n\nEndpoint `/modulo-indicadores/1_consultarIndicadoresConsolidados`.\nRetorna: total de serviços disponíveis, total de requisições no\nperíodo, percentual de sucesso, latência média (ms), volume total\ne médio de download (GB). Útil para diagnóstico/observabilidade,\n**não** para indicadores de mercado público (ver docstring do módulo).\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página (default 50, máximo 500).",
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_indicadores_por_periodo": {
+      "description": "Métricas operacionais da API por período (ano/mês).\n\nEndpoint Dados Abertos `/modulo-indicadores/2_consultarIndicadoresPorPeriodo`.\nRetorna métricas de USO da API (requisições, latência, downloads),\nnão dados de compras. Útil para análise temporal de disponibilidade\ndo upstream.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano de referência dos indicadores (4 dígitos).",
+            "maximum": 2100,
+            "minimum": 2010,
+            "type": "integer"
+          },
+          "mes": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Mês (1-12). Se omitido, agrega o ano inteiro. Se informado, filtra apenas o mês especificado."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_legado_compras_sem_licitacao": {
+      "description": "Lista compras sem licitação (dispensa/inexigibilidade) do regime legado.\n\nEndpoint `/modulo-legado/5_consultarComprasSemLicitacao`. **Upstream\nexige `dt_ano_aviso`** (ano inteiro, ex.: 2024) — não janela de datas.",
+      "parameters": {
+        "properties": {
+          "co_modalidade_licitacao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código da modalidade SIASG."
+          },
+          "co_orgao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código do órgão (opcional)."
+          },
+          "co_orgao_superior": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código do órgão superior (opcional)."
+          },
+          "co_uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG (opcional)."
+          },
+          "dt_ano_aviso": {
+            "description": "Ano do aviso (ex.: 2024). Obrigatório no upstream.",
+            "type": "integer"
+          },
+          "nu_aviso_licitacao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Número do aviso de licitação."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "pertence14133": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vincula à Lei 14.133."
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dt_ano_aviso"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_legado_itens_licitacao_listar": {
+      "description": "Lista itens de licitações legado (`/modulo-legado/2_consultarItemLicitacao`).\n\nUpstream exige `modalidade` obrigatório. Filtros opcionais: `uasg`,\n`numero_aviso`, `codigo_item_material/servico`, `cnpj_fornecedor`.",
+      "parameters": {
+        "properties": {
+          "cnpj_fornecedor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do fornecedor (opcional)."
+          },
+          "codigo_item_material": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código CATMAT (opcional)."
+          },
+          "codigo_item_servico": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código CATSER (opcional)."
+          },
+          "modalidade": {
+            "description": "Código de modalidade SIASG (obrigatório). Ex.: 5=Pregão, 6=Dispensa.",
+            "type": "integer"
+          },
+          "numero_aviso": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Número do aviso (opcional)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG (opcional)."
+          }
+        },
+        "required": [
+          "modalidade"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_legado_licitacao_consultar": {
+      "description": "Consulta uma licitação legado pelo id_compra.\n\nEndpoint `/modulo-legado/1.1_consultarLicitacao_Id`. Upstream exige\n`id_compra` (string), não um `id` numérico.",
+      "parameters": {
+        "properties": {
+          "id_compra": {
+            "description": "ID da compra no SIASG (string, retornado em `compras_legado_licitacoes_listar`).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id_compra"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_legado_licitacoes_listar": {
+      "description": "Lista licitações do regime legado (Lei 8.666/93).\n\nEndpoint `/modulo-legado/1_consultarLicitacao`. **Bug upstream\nconfirmado**: o filtro `uasg`, embora documentado no swagger oficial,\nretorna HTTP 400 (\"Erro ao efetuar a consulta\") porque o atributo não\nexiste no modelo Hibernate da view (`TbVwLicitacao`). Por isso este\nparâmetro foi removido da assinatura.\n\nWorkaround se você precisar filtrar por UASG: liste sem filtro, depois\nfiltre client-side pelo campo `uasg` do resultado.",
+      "parameters": {
+        "properties": {
+          "data_publicacao_final": {
+            "description": "Data final de publicação (YYYY-MM-DD). Obrigatório no upstream.",
+            "format": "date",
+            "type": "string"
+          },
+          "data_publicacao_inicial": {
+            "description": "Data inicial de publicação (YYYY-MM-DD). Obrigatório no upstream.",
+            "format": "date",
+            "type": "string"
+          },
+          "modalidade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código de modalidade SIASG (opcional)."
+          },
+          "numero_aviso": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Número do aviso (opcional)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "pertence14133": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtrar somente processos vinculados à Lei 14.133."
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_publicacao_inicial",
+          "data_publicacao_final"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_legado_pregoes_listar": {
+      "description": "Lista pregões eletrônicos do regime legado.\n\nEndpoint `/modulo-legado/3_consultarPregoes`. **Bug upstream\nconfirmado**: os filtros `co_uasg` e `co_orgao`, embora documentados\nno swagger, retornam HTTP 400 com erro Hibernate\n`Could not resolve attribute 'TbVwPregaoId.coUasg'` porque os atributos\nnão existem no modelo da view. Por isso ambos foram removidos da\nassinatura.\n\nWorkaround para filtrar por UASG: chame sem filtro e filtre client-side\npelos campos `coUasg`/`coOrgao` do resultado.",
+      "parameters": {
+        "properties": {
+          "ds_tipo_pregao_compra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Tipo do pregão de compra (string upstream)."
+          },
+          "dt_data_edital_final": {
+            "description": "Data final do edital (YYYY-MM-DD). Obrigatório.",
+            "format": "date",
+            "type": "string"
+          },
+          "dt_data_edital_inicial": {
+            "description": "Data inicial do edital (YYYY-MM-DD). Obrigatório.",
+            "format": "date",
+            "type": "string"
+          },
+          "numero": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Número do pregão (opcional)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "pertence14133": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtrar pregões vinculados à Lei 14.133."
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dt_data_edital_inicial",
+          "dt_data_edital_final"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_legado_rdc_listar": {
+      "description": "Lista contratações pelo RDC (Regime Diferenciado de Contratações).\n\nEndpoint `/modulo-legado/7_consultarRdc`. **Upstream usa\n`data_publicacao_min/max`** (note `min`/`max`, não `inicial`/`final`).\nRDC foi usado principalmente para obras dos megaeventos e da Copa —\nrelevância residual hoje.",
+      "parameters": {
+        "properties": {
+          "data_publicacao_max": {
+            "description": "Data MÁXIMA de publicação (YYYY-MM-DD). Obrigatório.",
+            "format": "date",
+            "type": "string"
+          },
+          "data_publicacao_min": {
+            "description": "Data MÍNIMA de publicação (YYYY-MM-DD). Obrigatório.",
+            "format": "date",
+            "type": "string"
+          },
+          "modalidade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código de modalidade."
+          },
+          "orgao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código do órgão (opcional)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG (opcional)."
+          },
+          "uf_uasg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UF da UASG (sigla, ex.: 'DF')."
+          }
+        },
+        "required": [
+          "data_publicacao_min",
+          "data_publicacao_max"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_listar_prompts": {
+      "description": "Lista os MCP Prompts disponíveis com nome, descrição e argumentos.\n\nTools de descoberta para clientes (como o Claude.ai web) que ainda\nnão expõem UI para prompts. Em Claude Desktop / Cursor / MCP Inspector,\nprompts aparecem em UI dedicada — esta tool é um caminho alternativo,\nnão substituto.\n\nUse depois `compras_obter_prompt(nome, argumentos)` para renderizar\num prompt específico.\n\nRetorno:\n    {\n      \"total\": int,\n      \"prompts\": [\n        {\n          \"nome\": str,\n          \"descricao\": str,\n          \"tags\": [str, ...],\n          \"argumentos\": [\n            {\"nome\": str, \"descricao\": str | None, \"obrigatorio\": bool},\n            ...\n          ]\n        },\n        ...\n      ]\n    }",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    "compras_listar_resources": {
+      "description": "Lista os MCP Resources disponíveis com URI, nome e mime-type.\n\nTools de descoberta para clientes que não expõem UI de attachment de\nresources (como o Claude.ai web). Em Claude Desktop / Cursor / MCP\nInspector, resources aparecem em picker dedicado.\n\nResources contêm dados de referência estáticos (tabelas de domínio,\nglossário, metadados do servidor). Use `compras_obter_resource(uri)`\npara ler o conteúdo.\n\nRetorno:\n    {\n      \"total\": int,\n      \"resources\": [\n        {\"uri\": str, \"nome\": str, \"descricao\": str, \"mime_type\": str, \"tags\": [str,...]},\n        ...\n      ]\n    }",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    "compras_montar_dossie_arp": {
+      "description": "Dossiê completo de uma ARP em uma chamada.\n\nComposição: cabeçalho via `/modulo-arp/1.1` (id PNCP) e — se `numero_item`\ninformado — saldo (4), adesões (5) e unidades participantes (3) em\nparalelo. Os 3 últimos endpoints usam a chave composta\n`numeroAta + unidadeGerenciadora`.\n\nOs 3 IDs vêm naturalmente do retorno de `compras_arp_listar` ou\n`compras_arp_itens_listar` (campos: `numeroControlePncpAta`,\n`numeroAta`, `unidadeGerenciadora`, `numeroItem`). Cache 10 min.\n\nQuando `numero_controle_pncp_ata` vem no formato de **compra** (sem\nsufixo `-NNNNNN`), devolvemos diagnóstico explícito antes de bater\nno upstream — caminho que retornava `cabecalho: null` silencioso.",
+      "parameters": {
+        "properties": {
+          "numero_ata": {
+            "description": "Número simples da ata (ex.: '00001/2024'). Usado nos endpoints de saldo, adesões e unidades participantes.",
+            "type": "string"
+          },
+          "numero_controle_pncp_ata": {
+            "description": "Identificador PNCP completo da **ata** (formato `cnpj14-1-sequencial/ano-NNNNNN`, com sufixo numerando a ata SRP dentro da compra). Ex.: `00394452000103-1-004729/2024-000006`. NÃO confundir com ID de compra (sem o sufixo). Retornado em `compras_arp_por_fim_vigencia` como `numeroControlePncpAta`.",
+            "type": "string"
+          },
+          "numero_item": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Número do item dentro da ata. Se informado, traz também saldo, adesões e unidades participantes daquele item. Se omitido, apenas o cabeçalho é consultado."
+          },
+          "unidade_gerenciadora": {
+            "description": "Código UASG da unidade gerenciadora da ata.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "numero_controle_pncp_ata",
+          "numero_ata",
+          "unidade_gerenciadora"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_obter_prompt": {
+      "description": "Renderiza um MCP Prompt e devolve o texto pronto.\n\nO texto retornado é o conteúdo da `PromptMessage[0]` — tipicamente um\nroteiro que orienta o LLM a executar um fluxo usando as tools deste\nservidor. Depois de obter o texto, o LLM normalmente segue as\ninstruções dele, chamando outras tools conforme indicado.\n\nRetorno:\n    {\n      \"nome\": str,\n      \"texto\": str,  # conteúdo renderizado pronto para usar\n      \"argumentos_usados\": dict,\n    }\n\nSe o prompt não existir ou faltar argumento obrigatório, retorna\n`_erro` com diagnóstico em vez de propagar exception.",
+      "parameters": {
+        "properties": {
+          "argumentos": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Mapa de argumentos exigidos pelo prompt. Os nomes e tipos vêm de `compras_listar_prompts`. Ex.: {\"cnpj_orgao\": \"00394460000141\", \"ano\": 2025, \"sequencial\": 12345}."
+          },
+          "nome": {
+            "description": "Nome do prompt a renderizar. Use `compras_listar_prompts` para descobrir nomes disponíveis. Exemplos: `analisar_contratacao_pncp`, `dossie_due_diligence_fornecedor`, `oportunidades_carona_arp`.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "nome"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_obter_resource": {
+      "description": "Lê o conteúdo de um MCP Resource pela URI.\n\nRetorna o conteúdo bruto (texto/JSON-string conforme o mime-type\nregistrado) e os metadados do resource.\n\nRetorno:\n    {\n      \"uri\": str,\n      \"nome\": str,\n      \"mime_type\": str,\n      \"conteudo\": str,\n    }\n\nSe a URI não existir, retorna `_erro` em vez de propagar exception.",
+      "parameters": {
+        "properties": {
+          "uri": {
+            "description": "URI do resource. Use `compras_listar_resources` para descobrir URIs disponíveis. Exemplos: `compras://referencia/modalidades-pncp`, `compras://glossario/lei-14133`, `compras://meta/escopo`.",
+            "minLength": 5,
+            "type": "string"
+          }
+        },
+        "required": [
+          "uri"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_orgao_consultar": {
+      "description": "Consulta um órgão específico pelo código.\n\nDevolve nome, sigla, CNPJ, esfera, poder e quantitativos.\nCache 24h.",
+      "parameters": {
+        "properties": {
+          "codigo_orgao": {
+            "description": "Código numérico do órgão (4-6 dígitos).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_orgao"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_orgao_listar": {
+      "description": "Lista órgãos cadastrados no Compras.gov.br.\n\nEndpoint Dados Abertos `/modulo-uasg/2_consultarOrgao`. Inclui órgãos\ndo SISG (Sistema de Serviços Gerais), com código numérico, nome,\nesfera, poder e CNPJ.\n\nCache 24h.",
+      "parameters": {
+        "properties": {
+          "esfera": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Esfera administrativa: 'F' (federal), 'E' (estadual), 'M' (municipal). Dados Abertos cobre majoritariamente federal."
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro textual pelo nome do órgão (match parcial)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "poder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Poder: 'E' (Executivo), 'L' (Legislativo), 'J' (Judiciário)."
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_perfil_fornecedor_completo": {
+      "description": "Perfil consolidado do fornecedor (cadastro + Receita + sanções + impedimentos).\n\nComposição em paralelo:\n- **cadastro**: Dados Abertos `/modulo-fornecedor/1_consultarFornecedor`\n  pelo CNPJ (razão social, CNAE, porte, natureza jurídica);\n- **receita_federal**: BrasilAPI / MinhaReceita — QSA, capital social,\n  atividades secundárias, data de início, situação cadastral (RF).\n  Provider configurável via `CNPJ_PROVIDER` (default `brasilapi`);\n- **sanções**: Portal da Transparência (CEIS+CNEP+CEPIM) pelo CNPJ;\n- **impedimentos Comprasnet**: `/api/comprasnet/compras/impedimentos`.\n\n**Não inclui lista de contratos** porque os endpoints upstream\n`/modulo-contratos/1` (Dados Abertos) e `/v1/contratos` (PNCP) exigem\n`codigoOrgao` como filtro obrigatório — não é possível listar contratos\nde um fornecedor sem saber em qual órgão ele tem contrato. Se você já\nsouber o órgão, use `compras_contratos_listar(codigo_orgao=X, ni_fornecedor=Y, ...)`.\n\nSanções dependem de `TRANSPARENCIA_API_KEY` — se não configurada ou se\no WAF da CGU bloquear, o bloco retorna aviso e o restante segue.\n\nCache 10 min.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "description": "CNPJ do fornecedor (14 dígitos, com ou sem pontuação).",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          }
+        },
+        "required": [
+          "cnpj"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pesquisar_preco_material": {
+      "description": "Pesquisa preços praticados em compras de material (CATMAT) pelo governo.\n\nEndpoint Dados Abertos: `/modulo-pesquisa-preco/1_consultarMaterial`.\nPara visão consolidada estatística (média/mediana no padrão IN 65/2021),\nuse a tool composta `compras_pesquisar_precos_para_etp`.\n\nCada item da resposta agrega uma compra distinta (uma UASG, uma data).\nPara obter o unitário ÚNICO de uma compra específica, use\n`compras_detalhar_preco_material`.",
+      "parameters": {
+        "properties": {
+          "codigo_item_catalogo": {
+            "description": "Código CATMAT do material. Inteiro 4-8 dígitos. Ex.: 460789.",
+            "type": "integer"
+          },
+          "codigo_municipio": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código IBGE do município (7 dígitos). Filtro mais fino que UF."
+          },
+          "codigo_uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código da UASG compradora (filtro mais específico ainda)."
+          },
+          "data_fim": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data final da compra (YYYY-MM-DD). Quando omitida, a API usa a data atual."
+          },
+          "data_inicio": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data inicial da compra (YYYY-MM-DD). Quando omitida, a API usa o início do ano corrente."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Sigla da UF (ex.: 'DF'). Filtra compras realizadas pelo órgão da UF."
+          }
+        },
+        "required": [
+          "codigo_item_catalogo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pesquisar_preco_servico": {
+      "description": "Pesquisa preços praticados em compras de serviço (CATSER).\n\nEndpoint: `/modulo-pesquisa-preco/3_consultarServico`. Para visão\nconsolidada (mediana, média, desvio no padrão IN 65/2021), use a tool\ncomposta `compras_pesquisar_precos_para_etp` com tipo='servico'.",
+      "parameters": {
+        "properties": {
+          "codigo_item_catalogo": {
+            "description": "Código CATSER do serviço. Inteiro 4-6 dígitos. Ex.: 27332.",
+            "type": "integer"
+          },
+          "codigo_municipio": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código IBGE do município."
+          },
+          "codigo_uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG."
+          },
+          "data_fim": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data final (YYYY-MM-DD)."
+          },
+          "data_inicio": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data inicial (YYYY-MM-DD)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Sigla da UF."
+          }
+        },
+        "required": [
+          "codigo_item_catalogo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pesquisar_precos_para_etp": {
+      "description": "Agrega preços praticados aplicando metodologia IN SEGES/ME 65/2021.\n\nComposição: percorre `compras_pesquisar_preco_material` ou `_servico`\nem até `max_paginas`, agrega os valores unitários e calcula:\nmediana, média, desvio padrão, mínimo, máximo, quartis (Q1, Q3) e\ndescarte de outliers por IQR (1.5×IQR — Tukey).\n\nSaída pronta para colagem em ETP: lista detalhada + sumário estatístico\n+ amostra recomendada (sem outliers). Cache 10 min.",
+      "parameters": {
+        "properties": {
+          "codigo_item_catalogo": {
+            "description": "Código CATMAT (material) ou CATSER (serviço).",
+            "type": "integer"
+          },
+          "max_paginas": {
+            "default": 5,
+            "description": "Número máximo de páginas a percorrer ao agregar. Cada página tem 500 registros. Default 5 (até 2500 contratações). Aumente para amostras maiores.",
+            "type": "integer"
+          },
+          "periodo_meses": {
+            "default": 12,
+            "description": "Janela de pesquisa em meses contados de hoje para trás. Default 12 (prazo recomendado pela IN SEGES/ME 65/2021 art. 5).",
+            "type": "integer"
+          },
+          "tipo": {
+            "description": "Tipo do item: 'material' (consulta CATMAT) ou 'servico' (consulta CATSER).",
+            "enum": [
+              "material",
+              "servico"
+            ],
+            "type": "string"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro opcional por UF (ex.: 'DF')."
+          }
+        },
+        "required": [
+          "tipo",
+          "codigo_item_catalogo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pgc_agregacao": {
+      "description": "Resumo agregado do PGC de um órgão num ano (totais por categoria).\n\nEndpoint Dados Abertos `/modulo-pgc/3_consultarPgcAgregacao`. Retorna\ncontagens e valores totais por categoria/grupo, útil para diagnóstico\nrápido do volume planejado pelo órgão.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PGC.",
+            "type": "integer"
+          },
+          "codigo_orgao": {
+            "description": "Código do órgão (obrigatório nesta consulta — é a chave da agregação).",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano",
+          "codigo_orgao"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pgc_listar": {
+      "description": "Lista itens de PGC (Plano de Gestão de Contratações) do governo federal.\n\nEndpoint Dados Abertos `/modulo-pgc/1_consultarPgcDetalhe`. Cada linha\nrepresenta um item planejado: descrição, quantidade, valor unitário\nestimado, mês previsto de início e categoria de item.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PGC. Os PGCs do governo federal começam a aparecer a partir de 2020.",
+            "type": "integer"
+          },
+          "codigo_orgao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código do órgão (filtra os PGCs desse órgão)."
+          },
+          "codigo_uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG (filtro mais específico que codigo_orgao)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pgc_listar_csv": {
+      "description": "Versão CSV de `compras_pgc_listar` (mesmo dataset, formato planilha).\n\nEndpoint `/modulo-pgc/1.1_consultarPgcDetalhe_CSV`. Útil para colar no\nETP ou planilhar localmente. Retorna o CSV no campo `csv` da resposta.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PGC. Os PGCs do governo federal começam a aparecer a partir de 2020.",
+            "type": "integer"
+          },
+          "codigo_orgao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código do órgão (filtra os PGCs desse órgão)."
+          },
+          "codigo_uasg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código UASG (filtro mais específico que codigo_orgao)."
+          }
+        },
+        "required": [
+          "ano"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pgc_por_catalogo": {
+      "description": "Lista todos os PGCs que incluem determinado item de catálogo (CATMAT/CATSER).\n\nEndpoint Dados Abertos `/modulo-pgc/2_consultarPgcDetalheCatalogo`.\nÚtil para responder: \"Quais órgãos planejaram comprar esse item este ano?\nEm que quantidade?\". Insumo para ETP e benchmarking de quantitativos.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PCA/PGC.",
+            "type": "integer"
+          },
+          "codigo_item": {
+            "description": "Código do item no catálogo (CATMAT se tipo='M', CATSER se tipo='S').",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          },
+          "tipo": {
+            "description": "'M' para CATMAT (material) ou 'S' para CATSER (serviço).",
+            "enum": [
+              "M",
+              "S"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "ano",
+          "tipo",
+          "codigo_item"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_atas_listar": {
+      "description": "Lista atas registradas no PNCP no período (federal + estadual + municipal).\n\nEndpoint PNCP `/v1/atas`. Permite encontrar atas de qualquer ente da\nfederação — mais amplo que Dados Abertos (só federal SISG).\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "cnpj_orgao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do órgão (14 dígitos)."
+          },
+          "data_final": {
+            "description": "Data final (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial": {
+            "description": "Data inicial (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_inicial",
+          "data_final"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacao_item_resultados": {
+      "description": "Lista resultados (vencedores) de um item específico de contratação no PNCP.\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{n}/resultados`.\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano da contratação.",
+            "type": "integer"
+          },
+          "cnpj": {
+            "description": "CNPJ do órgão.",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          },
+          "numero_item": {
+            "description": "Número do item dentro da contratação.",
+            "type": "integer"
+          },
+          "sequencial": {
+            "description": "Sequencial.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cnpj",
+          "ano",
+          "sequencial",
+          "numero_item"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacao_itens": {
+      "description": "Lista itens de uma contratação no PNCP.\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens`.\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano da contratação.",
+            "type": "integer"
+          },
+          "cnpj": {
+            "description": "CNPJ do órgão.",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "sequencial": {
+            "description": "Sequencial da contratação.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cnpj",
+          "ano",
+          "sequencial"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacao_por_orgao": {
+      "description": "Consulta uma contratação específica pelo CNPJ + ano + sequencial.\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}`. Devolve\ncabeçalho completo da contratação.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano da contratação (4 dígitos).",
+            "type": "integer"
+          },
+          "cnpj": {
+            "description": "CNPJ do órgão (14 dígitos, com ou sem pontuação).",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          },
+          "sequencial": {
+            "description": "Sequencial da contratação dentro do órgão e ano.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cnpj",
+          "ano",
+          "sequencial"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacoes_atualizacao": {
+      "description": "Lista contratações alteradas no período (PNCP).\n\nEndpoint `/v1/contratacoes/atualizacao`. Útil para monitoramento:\ndescobrir editais que sofreram retificações/republicações. Aceita\nfiltro `esfera` client-side.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_modalidade": {
+            "description": "Código da modalidade (obrigatório no PNCP). Códigos comuns: 1=Leilão Eletrônico, 4=Concorrência Eletrônica, 6=Pregão Eletrônico, 8=Dispensa, 9=Inexigibilidade, 13=Concurso.",
+            "type": "integer"
+          },
+          "data_final": {
+            "description": "Data final de atualização (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial": {
+            "description": "Data inicial de atualização (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "esfera": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro opcional de esfera federativa (`federal`, `estadual`, `municipal` ou `distrital`). Aplicado client-side sobre a página retornada — útil para recortar a lista, mas note que `_total_registros` continua refletindo o total **sem** filtro de esfera."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página (PNCP mínimo 10).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_inicial",
+          "data_final",
+          "codigo_modalidade"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacoes_proposta": {
+      "description": "Lista contratações com prazo de proposta aberto no PNCP.\n\nEndpoint `/v1/contratacoes/proposta`. Útil para mapear oportunidades\nabertas para fornecedores ou para identificar contratações em curso\nem órgãos similares. Filtro `esfera` opcional client-side.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "codigo_modalidade": {
+            "description": "Código da modalidade (ver PNCPListarContratacoesInput).",
+            "type": "integer"
+          },
+          "data_final": {
+            "description": "Data limite para propostas (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "esfera": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro opcional de esfera federativa (`federal`, `estadual`, `municipal` ou `distrital`). Aplicado client-side sobre a página retornada — útil para recortar a lista, mas note que `_total_registros` continua refletindo o total **sem** filtro de esfera."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Sigla da UF."
+          }
+        },
+        "required": [
+          "data_final",
+          "codigo_modalidade"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacoes_publicacao": {
+      "description": "Lista contratações publicadas no PNCP no período.\n\nEndpoint `/v1/contratacoes/publicacao`. Cobre todos os entes da\nfederação. Modalidades comuns: 6=Pregão Eletrônico, 8=Dispensa,\n9=Inexigibilidade, 4=Concorrência Eletrônica.\n\nO filtro `esfera` (federal/estadual/municipal/distrital) é aplicado\nclient-side sobre a página retornada. Janela máxima por consulta: ~30\ndias. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "cnpj_orgao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do órgão (14 dígitos)."
+          },
+          "codigo_modalidade": {
+            "description": "Código da modalidade (obrigatório no PNCP). Códigos comuns: 1=Leilão Eletrônico, 4=Concorrência Eletrônica, 6=Pregão Eletrônico, 8=Dispensa, 9=Inexigibilidade, 13=Concurso.",
+            "type": "integer"
+          },
+          "codigo_municipio_ibge": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Código IBGE do município (7 dígitos)."
+          },
+          "data_final": {
+            "description": "Data final de publicação (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial": {
+            "description": "Data inicial de publicação (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "esfera": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtro opcional de esfera federativa (`federal`, `estadual`, `municipal` ou `distrital`). Aplicado client-side sobre a página retornada — útil para recortar a lista, mas note que `_total_registros` continua refletindo o total **sem** filtro de esfera."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página (PNCP mínimo 10).",
+            "type": "integer"
+          },
+          "uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Sigla da UF."
+          }
+        },
+        "required": [
+          "data_inicial",
+          "data_final",
+          "codigo_modalidade"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contrato_por_orgao": {
+      "description": "Consulta um contrato específico no PNCP.\n\nEndpoint `/v1/orgaos/{cnpj}/contratos/{ano}/{sequencial}`. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do contrato.",
+            "type": "integer"
+          },
+          "cnpj": {
+            "description": "CNPJ do órgão.",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          },
+          "sequencial": {
+            "description": "Sequencial do contrato.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cnpj",
+          "ano",
+          "sequencial"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratos_listar": {
+      "description": "Lista contratos publicados no PNCP no período.\n\nEndpoint `/v1/contratos`. Cache 15 min.",
+      "parameters": {
+        "properties": {
+          "cnpj_orgao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do órgão (14 dígitos)."
+          },
+          "data_final": {
+            "description": "Data final (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial": {
+            "description": "Data inicial de publicação do contrato (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_inicial",
+          "data_final"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_modalidades": {
+      "description": "Cheat sheet local: códigos de modalidade de contratação do PNCP.\n\nTool local (não chama upstream). Fonte: tabela oficial PNCP (Lei 14.133).\n\n**ATENÇÃO — duas tabelas em circulação no ecossistema Compras**:\n- `codigo` aqui (PNCP) é o usado em TODAS as tools `compras_pncp_*` e\n  em `modalidadeIdPncp` no payload de retorno.\n- O Dados Abertos / SIASG usa uma enumeração diferente em\n  `compras_contratacoes_14133_listar(codigo_modalidade_dados_abertos)`:\n  campo `equivalente_dados_abertos` abaixo, ou None se a modalidade\n  não estiver disponível naquele endpoint.",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    "compras_pncp_orgao_unidades": {
+      "description": "Lista unidades administrativas de um órgão no PNCP.\n\nEndpoint PNCP `/v1/orgaos/{cnpj}/unidades`. Útil para descobrir códigos\nde unidade antes de filtrar contratações/contratos do órgão.\n\nCobre estados e municípios (não só federal). Cache 24h.\n\n**Tratamento de 404**: nem todo CNPJ está indexado no PNCP. Em vez de\nlevantar exception, esta tool retorna `_erro_upstream` informativo\ncom lista de alternativas (mesmo padrão das tools `compras_uasg_*` /\n`compras_orgao_*` quando o `/modulo-uasg/*` retorna 404).",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "description": "CNPJ do órgão (14 dígitos, com ou sem pontuação). Exemplo: 00394460000141 (Presidência da República).",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          }
+        },
+        "required": [
+          "cnpj"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_pca_atualizacao": {
+      "description": "Lista PCAs atualizados num período (PNCP).\n\nEndpoint PNCP `/v1/pca/atualizacao`. Útil para monitoramento: descobrir\nquais órgãos revisaram seu PCA recentemente.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "data_final": {
+            "description": "Data final do período (YYYY-MM-DD). Janela máxima ~30 dias.",
+            "format": "date",
+            "type": "string"
+          },
+          "data_inicial": {
+            "description": "Data inicial do período de atualização (YYYY-MM-DD).",
+            "format": "date",
+            "type": "string"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data_inicial",
+          "data_final"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_pca_listar": {
+      "description": "Lista PCAs (Planos Anuais de Contratações) no PNCP.\n\nEndpoint PNCP `/v1/pca/`. Diferente do PGC, o PCA da Lei 14.133 cobre\nfederais + estaduais + municipais. Filtra por categoria do item\n(`codigo_classificacao_superior` é obrigatório no upstream).\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PCA (Lei 14.133).",
+            "type": "integer"
+          },
+          "cnpj_orgao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do órgão (filtra PCAs desse órgão; 14 dígitos)."
+          },
+          "codigo_classificacao_superior": {
+            "description": "Código da classificação superior do item no catálogo. Obrigatório no endpoint PNCP. Para CATMAT use o código do grupo; para CATSER use o código da seção. Veja `compras_catmat_listar_grupos` ou `compras_catser_listar_secoes`.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano",
+          "codigo_classificacao_superior"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_pca_por_classificacao_superior": {
+      "description": "Lista itens de PCA filtrados por categoria superior do item.\n\nEndpoint PNCP `/v1/pca/` com `codigoClassificacaoSuperior`. Permite\nagregar planejamentos por categoria (ex.: todos os itens de TI\nplanejados para o ano).\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PCA.",
+            "type": "integer"
+          },
+          "codigo_classificacao_superior": {
+            "description": "Código de classificação superior do item (categoria pai). Veja a tabela de classificação no manual do PNCP.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano",
+          "codigo_classificacao_superior"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_pca_por_usuario": {
+      "description": "Lista PCAs vinculados a um usuário/sistema integrador específico.\n\nEndpoint PNCP `/v1/pca/usuario`. Uso menos comum — geralmente o\nanalista prefere `compras_pncp_pca_listar` com `cnpj_orgao`.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano do PCA.",
+            "type": "integer"
+          },
+          "id_usuario": {
+            "description": "ID interno de usuário/sistema integrador do PNCP. Obtido na documentação interna do órgão; raramente usado por analistas.",
+            "type": "integer"
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Registros por página.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano",
+          "id_usuario"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_sancao_acordos_leniencia": {
+      "description": "Lista acordos de leniência firmados com a CGU.\n\nEndpoint `/api-de-dados/acordos-leniencia`. Empresas com acordo ativo\nestão sob compromisso de compliance reforçado — informação útil para\nanálise de risco em contratações de alto valor.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do sancionado (14 dígitos)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_sancao_ceaf": {
+      "description": "Consulta CEAF — Cadastro de Expulsões da Administração Federal.\n\nEndpoint `/api-de-dados/ceaf`. Servidores expulsos do serviço público\nfederal. Útil quando se identifica responsável/preposto suspeito.\n\nCPFs mascarados por LGPD (`123.***.***-45`). Cache 1h.",
+      "parameters": {
+        "properties": {
+          "cpf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CPF do servidor (11 dígitos, com ou sem pontuação)."
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Nome do servidor expulso (busca textual)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_sancao_ceis": {
+      "description": "Consulta CEIS — Cadastro de Empresas Inidôneas e Suspensas.\n\nEndpoint `/api-de-dados/ceis`. Empresas com sanção ativa não podem\ncontratar com a administração pública. Use **sempre** antes de\nhomologar pregões e contratos.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do fornecedor (14 dígitos, com ou sem pontuação)."
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Nome (razão social/fantasia) do sancionado para busca textual."
+          },
+          "orgao_sancionador": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Sigla do órgão sancionador (ex.: 'TCU')."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_sancao_cepim": {
+      "description": "Consulta CEPIM — Entidades Privadas Sem Fins Lucrativos Impedidas.\n\nEndpoint `/api-de-dados/cepim`. Aplicável a contratações via convênios\ne termos de fomento com OSCs.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ da entidade (14 dígitos)."
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Nome da entidade (busca textual)."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_sancao_cnep": {
+      "description": "Consulta CNEP — Cadastro Nacional de Empresas Punidas (Lei Anticorrupção).\n\nEndpoint `/api-de-dados/cnep`. Empresas punidas pela Lei 12.846/2013\n(Lei Anticorrupção). Indicador de risco de integridade.\n\nCache 1h.",
+      "parameters": {
+        "properties": {
+          "cnpj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "CNPJ do fornecedor (14 dígitos, com ou sem pontuação)."
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Nome do sancionado."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página (1-based).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_uasg_buscar": {
+      "description": "Busca UASGs por trecho do nome (match parcial).\n\nAtalho para `compras_uasg_listar` com filtro textual. Útil quando o\nanalista sabe o nome do órgão mas não o código UASG.\n\nCache 24h.",
+      "parameters": {
+        "properties": {
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          },
+          "termo": {
+            "description": "Termo de busca textual no nome da UASG. Ex.: 'ANTAQ', 'aquaviarios', 'tribunal regional'.",
+            "maxLength": 100,
+            "minLength": 2,
+            "type": "string"
+          }
+        },
+        "required": [
+          "termo"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_uasg_consultar": {
+      "description": "Consulta uma UASG específica pelo código.\n\nDevolve nome, sigla, CNPJ vinculado, órgão superior e endereço.\nÚtil para resolver `codigo_uasg` antes de consultas filtradas.\n\nCache 24h.",
+      "parameters": {
+        "properties": {
+          "codigo_uasg": {
+            "description": "Código numérico da UASG.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo_uasg"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_uasg_listar": {
+      "description": "Lista UASGs (Unidades Administrativas de Serviços Gerais) do governo.\n\n**⚠️ Endpoint upstream indisponível (confirmado 2026-05)**: o path\n`/modulo-uasg/1_consultarUasg` retorna HTTP 404 apesar de listado no\nswagger oficial. Esta tool detecta o 404 e retorna `_erro_upstream`\neducativo + alternativas — não levanta exception.\n\nPara resolver UASG/órgão hoje, use as alternativas:\n- `compras_contrato_comprasnet_por_uasg(codigo_uasg=...)`: lista\n  contratos de uma UASG (útil para validar que ela existe);\n- GET https://contratos.comprasnet.gov.br/api/contrato/unidades:\n  lista todos os códigos UG federais (sem nomes).\n\nCache 24h.",
+      "parameters": {
+        "properties": {
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True para apenas UASGs ativas, False para inativas, None para ambas."
+          },
+          "codigo_orgao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filtra UASGs subordinadas a este código de órgão."
+          },
+          "pagina": {
+            "default": 1,
+            "description": "Página de resultados (1-based). Padrão 1.",
+            "type": "integer"
+          },
+          "tamanho_pagina": {
+            "default": 50,
+            "description": "Quantidade de registros por página. Padrão 50, máximo 500.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "compras_versao": {
+      "description": "Healthcheck/diagnóstico do MCP. Retorna versão, fontes upstream e\nestado de configurações sensíveis (sem expor valores).\n\nÚtil para confirmar que o servidor está respondendo, qual a versão\ninstalada, quais APIs estão acessíveis e se a chave da Transparência\nfoi configurada (necessária para tools de sanções).",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    }
+  }
+}

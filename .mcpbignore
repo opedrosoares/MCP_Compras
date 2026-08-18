@@ -1,0 +1,17 @@
+.venv
+.env
+.git
+.gitignore
+.claude
+.mcpbignore
+.dockerignore
+__pycache__
+*.pyc
+*.egg-info
+dist/
+build/
+.DS_Store
+tests/
+scripts/
+docs/
+uv.lock

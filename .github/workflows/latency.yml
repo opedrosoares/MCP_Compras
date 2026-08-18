@@ -1,0 +1,34 @@
+name: Upstream latency probe
+
+on:
+  schedule:
+    # Toda segunda às 13:00 UTC (10:00 BRT)
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Setup Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Measure latency
+        env:
+          LATENCY_SAMPLES: "3"
+        run: PYTHONPATH=src uv run python scripts/measure_latency.py | tee latency-report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: latency-report
+          path: latency-report.json
+          retention-days: 90

@@ -1,0 +1,454 @@
+{
+  "manifest_version": "0.3",
+  "name": "compras",
+  "display_name": "Compras.gov.br",
+  "version": "0.3.14",
+  "description": "94 tools + 6 prompts + 6 resources cobrindo APIs publicas do Compras.gov.br (Dados Abertos, PNCP, Portal da Transparencia/CGU, Comprasnet Contratos e BrasilAPI/Receita) para apoio a ETP, TR e demais documentos pela Lei 14.133/2021. Inclui tools-espelho (compras_listar_prompts, compras_obter_prompt, compras_listar_resources, compras_obter_resource) para clientes MCP que so consomem o primitivo tools (ex.: Claude.ai web).",
+  "long_description": "Servidor MCP voltado a analistas e tecnicos das areas de planejamento de contratacao e execucao contratual. Reune em tools unicas as principais APIs publicas do ecossistema Compras.gov.br: Dados Abertos (CATMAT/CATSER, pesquisa de precos, contratacoes 14.133, atas de registro de preco, contratos, fornecedores, PGC, indicadores), Portal Nacional de Contratacoes Publicas - PNCP (contratacoes federadas, propostas com prazo aberto, atas, agregacao temporal e comparacao de periodos), Portal da Transparencia/CGU (sancoes CEIS, CNEP, CEAF) e BrasilAPI/MinhaReceita (enriquecimento de CNPJ com QSA, capital, CNAEs). Inclui tools compostas de alto valor (pesquisa de precos para ETP no padrao IN SEGES/ME 65/2021, dossie de ata de registro de preco com adesoes, perfil consolidado de fornecedor com sancoes + Receita, checagem paralela de sancoes, busca federada de contratacoes similares), filtro de esfera federativa nas listagens PNCP, alem de prompts pre-definidos (roteiros para analise de edital, dossie de fornecedor, panorama de orgao, oportunidades de carona em ARP, montagem de pesquisa de precos e analise de tendencia) e resources de referencia (modalidades, esferas, criterios de julgamento, glossario da Lei 14.133).",
+  "author": {
+    "name": "Pedro Soares",
+    "email": "pedrohsoares.adv@gmail.com",
+    "url": "https://github.com/opedrosoares/MCP_Compras"
+  },
+  "homepage": "https://github.com/opedrosoares/MCP_Compras",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opedrosoares/MCP_Compras"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "server": {
+    "type": "python",
+    "entry_point": "bootstrap.py",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/bootstrap.py"
+      ],
+      "env": {
+        "TRANSPARENCIA_API_KEY": "${user_config.transparencia_api_key}",
+        "REDIS_URL": "${user_config.redis_url}",
+        "INCLUIR_CPF_COMPLETO": "${user_config.incluir_cpf_completo}",
+        "LOG_LEVEL": "${user_config.log_level}"
+      }
+    }
+  },
+  "user_config": {
+    "transparencia_api_key": {
+      "type": "string",
+      "title": "Chave da API do Portal da Transparencia (CGU)",
+      "description": "Cadastro gratuito em api.portaldatransparencia.gov.br/api-de-dados/cadastrar-email. Habilita as tools de sancoes (CEIS, CNEP, CEAF). Sem ela, as demais tools (Dados Abertos e PNCP) continuam funcionando.",
+      "sensitive": true,
+      "required": false
+    },
+    "redis_url": {
+      "type": "string",
+      "title": "URL do Redis (opcional)",
+      "description": "Se configurada, o cache TTL e armazenado no Redis (recomendado para deploy Railway com multiplos pods). Sem ela, cache fica em memoria local.",
+      "sensitive": true,
+      "required": false
+    },
+    "incluir_cpf_completo": {
+      "type": "string",
+      "title": "Incluir CPFs completos nas respostas",
+      "description": "Default 'false': CPFs sao mascarados (123.***.***-45). Use 'true' apenas quando estritamente necessario.",
+      "default": "false",
+      "required": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Nivel de log",
+      "description": "DEBUG, INFO, WARNING ou ERROR.",
+      "default": "INFO",
+      "required": false
+    }
+  },
+  "tools": [
+    {
+      "name": "compras_aggregate_contratacoes_por_periodo",
+      "description": "Série temporal de contratações no PNCP por bucket (dia/semana/mês/ano), com métrica de contagem ou soma de valor estimado/homologado."
+    },
+    {
+      "name": "compras_arp_adesoes_item",
+      "description": "Lista adesões (caronas) já realizadas a uma ARP."
+    },
+    {
+      "name": "compras_arp_buscar_por_objeto",
+      "description": "Busca ARPs vigentes cujo campo objeto contem uma palavra-chave (filtro server-side em ate 5000 atas; resolve o gap upstream)."
+    },
+    {
+      "name": "compras_arp_consultar",
+      "description": "Consulta uma ARP específica pelo número PNCP."
+    },
+    {
+      "name": "compras_arp_itens_listar",
+      "description": "Lista itens de ARPs."
+    },
+    {
+      "name": "compras_arp_listar",
+      "description": "Lista Atas de Registro de Preço (ARPs)."
+    },
+    {
+      "name": "compras_arp_por_fim_vigencia",
+      "description": "Lista ARPs cuja vigência termina até a data informada."
+    },
+    {
+      "name": "compras_arp_saldo_item",
+      "description": "Devolve o **saldo** (quantidade ainda disponível) de itens da ARP."
+    },
+    {
+      "name": "compras_arp_unidades_item",
+      "description": "Lista UGs participantes (que podem aderir) de um item da ARP."
+    },
+    {
+      "name": "compras_buscar_contratacoes_similares",
+      "description": "Federa Dados Abertos + PNCP buscando contratações similares."
+    },
+    {
+      "name": "compras_catmat_buscar",
+      "description": "Busca itens CATMAT por descrição (match parcial)."
+    },
+    {
+      "name": "compras_catmat_consultar",
+      "description": "Consulta detalhes de um item CATMAT específico pelo código."
+    },
+    {
+      "name": "compras_catmat_listar_classes",
+      "description": "Lista as classes do CATMAT, opcionalmente filtradas por grupo."
+    },
+    {
+      "name": "compras_catmat_listar_grupos",
+      "description": "Lista os grupos do CATMAT (Catálogo de Materiais)."
+    },
+    {
+      "name": "compras_catser_consultar",
+      "description": "Consulta detalhes de um item CATSER pelo código."
+    },
+    {
+      "name": "compras_catser_listar_classes",
+      "description": "Lista as classes CATSER, opcionalmente filtradas por grupo."
+    },
+    {
+      "name": "compras_catser_listar_secoes",
+      "description": "Lista as seções do CATSER (Catálogo de Serviços)."
+    },
+    {
+      "name": "compras_checar_sancoes_fornecedor",
+      "description": "Consolida sanções de um fornecedor (CEIS + CNEP + CEPIM + leniência + impedimentos)."
+    },
+    {
+      "name": "compras_comparar_periodos_contratacoes",
+      "description": "Compara dois períodos lado a lado para a mesma modalidade. Retorna totais de A e B + delta absoluto + delta percentual."
+    },
+    {
+      "name": "compras_contratacoes_14133_consultar",
+      "description": "Consulta uma contratação 14.133 pelo id interno."
+    },
+    {
+      "name": "compras_contratacoes_14133_itens_listar",
+      "description": "Lista itens de contratações 14.133 incluídos no período."
+    },
+    {
+      "name": "compras_contratacoes_14133_itens_por_contratacao",
+      "description": "Lista itens de uma contratação 14.133 específica."
+    },
+    {
+      "name": "compras_contratacoes_14133_listar",
+      "description": "Lista contratações da Lei 14.133 publicadas no PNCP."
+    },
+    {
+      "name": "compras_contratacoes_14133_resultados_listar",
+      "description": "Lista resultados (homologações) de itens 14.133 no período."
+    },
+    {
+      "name": "compras_contratacoes_14133_resultados_por_contratacao",
+      "description": "Lista resultados de uma contratação 14.133 específica."
+    },
+    {
+      "name": "compras_contrato_comprasnet_consultar",
+      "description": "Consulta detalhe completo de um contrato no Comprasnet (/api/contrato/id/{id})."
+    },
+    {
+      "name": "compras_contrato_comprasnet_por_uasg",
+      "description": "Lista contratos de uma UASG no Comprasnet (rotas /ug/{uasg} ou /inativo/ug/{uasg})."
+    },
+    {
+      "name": "compras_contrato_cronograma",
+      "description": "Lista cronograma financeiro (/api/contrato/{id}/cronograma). Cache 15 min."
+    },
+    {
+      "name": "compras_contrato_empenhos",
+      "description": "Lista empenhos do contrato (/api/contrato/{id}/empenhos). Cache 15 min."
+    },
+    {
+      "name": "compras_contrato_faturas",
+      "description": "Lista NFs/faturas (/api/contrato/{id}/faturas). Cache 15 min."
+    },
+    {
+      "name": "compras_contrato_garantias",
+      "description": "Lista garantias contratuais (/api/contrato/{id}/garantias). Cache 15 min."
+    },
+    {
+      "name": "compras_contrato_historico_aditivos",
+      "description": "Lista aditivos do contrato (/api/contrato/{id}/historico). Cache 15 min."
+    },
+    {
+      "name": "compras_contrato_ocorrencias",
+      "description": "Lista ocorrências/penalidades (/api/contrato/{id}/ocorrencias)."
+    },
+    {
+      "name": "compras_contrato_publicacoes",
+      "description": "Lista publicações DOU (/api/contrato/{id}/publicacoes). Cache 15 min."
+    },
+    {
+      "name": "compras_contrato_responsaveis",
+      "description": "Lista fiscais/gestores (/api/contrato/{id}/responsaveis)."
+    },
+    {
+      "name": "compras_contratos_consultar",
+      "description": "Consulta um contrato no Dados Abertos pelo id (endpoint 1.1)."
+    },
+    {
+      "name": "compras_contratos_itens_listar",
+      "description": "Lista itens de contratos (endpoint 2). Cache 15 min."
+    },
+    {
+      "name": "compras_contratos_listar",
+      "description": "Lista contratos federais (Dados Abertos /modulo-contratos/1)."
+    },
+    {
+      "name": "compras_contratos_listar_por_fim_vigencia",
+      "description": "Lista contratos com vencimento até a data informada (endpoint 1.2)."
+    },
+    {
+      "name": "compras_detalhar_preco_material",
+      "description": "Detalha unitários de cada compra individual de um item CATMAT no período."
+    },
+    {
+      "name": "compras_detalhar_preco_servico",
+      "description": "Detalha unitários por compra individual de um serviço CATSER."
+    },
+    {
+      "name": "compras_fornecedor_cnpj_receita",
+      "description": "Dados públicos do CNPJ na Receita Federal via BrasilAPI/MinhaReceita: razão social, situação, CNAE, QSA, capital social."
+    },
+    {
+      "name": "compras_fornecedor_consultar",
+      "description": "Consulta cadastro de um fornecedor pelo CNPJ ou CPF."
+    },
+    {
+      "name": "compras_fornecedor_contratos_por_item",
+      "description": "Lista contratos e empenhos por itens (CATMAT/CATSER) no Comprasnet."
+    },
+    {
+      "name": "compras_fornecedor_impedimentos_por_itens",
+      "description": "Consulta impedimentos no Comprasnet por lista de itens (CATMAT/CATSER)."
+    },
+    {
+      "name": "compras_fornecedor_listar",
+      "description": "Lista fornecedores no Compras.gov.br com filtros estruturais."
+    },
+    {
+      "name": "compras_healthcheck",
+      "description": "Diagnóstico em ~30s: dispara probe paralelo nas rotas upstream reais e devolve a situação por módulo (ok / degradado / fora), tools afetadas e `pronto_para_uso`."
+    },
+    {
+      "name": "compras_indicadores_consolidados",
+      "description": "Lista indicadores consolidados do governo federal SISG."
+    },
+    {
+      "name": "compras_indicadores_por_periodo",
+      "description": "Lista indicadores agregados por período (ano/mês)."
+    },
+    {
+      "name": "compras_legado_compras_sem_licitacao",
+      "description": "Lista compras sem licitação (dispensa/inexigibilidade) do regime legado."
+    },
+    {
+      "name": "compras_legado_itens_licitacao_listar",
+      "description": "Lista itens de licitações legado. Endpoint `/modulo-legado/2_consultarItemLicitacao`."
+    },
+    {
+      "name": "compras_legado_licitacao_consultar",
+      "description": "Consulta uma licitação legado pelo id."
+    },
+    {
+      "name": "compras_legado_licitacoes_listar",
+      "description": "Lista licitações do regime legado (Lei 8.666/93)."
+    },
+    {
+      "name": "compras_legado_pregoes_listar",
+      "description": "Lista pregões eletrônicos do regime legado."
+    },
+    {
+      "name": "compras_legado_rdc_listar",
+      "description": "Lista contratações pelo RDC (Regime Diferenciado de Contratações)."
+    },
+    {
+      "name": "compras_listar_prompts",
+      "description": "Lista os MCP Prompts disponiveis (tool-espelho para clientes que nao consomem prompts user-controlled)."
+    },
+    {
+      "name": "compras_listar_resources",
+      "description": "Lista os MCP Resources disponiveis (tool-espelho para clientes que nao consomem resources user-controlled)."
+    },
+    {
+      "name": "compras_montar_dossie_arp",
+      "description": "Dossiê completo de uma ARP em uma chamada."
+    },
+    {
+      "name": "compras_obter_prompt",
+      "description": "Renderiza um MCP Prompt pelo nome e devolve o texto pronto."
+    },
+    {
+      "name": "compras_obter_resource",
+      "description": "Le o conteudo de um MCP Resource pela URI."
+    },
+    {
+      "name": "compras_orgao_consultar",
+      "description": "Consulta um órgão específico pelo código."
+    },
+    {
+      "name": "compras_orgao_listar",
+      "description": "Lista órgãos cadastrados no Compras.gov.br."
+    },
+    {
+      "name": "compras_perfil_fornecedor_completo",
+      "description": "Perfil consolidado do fornecedor (cadastro + sanções + contratos vigentes)."
+    },
+    {
+      "name": "compras_pesquisar_preco_material",
+      "description": "Pesquisa preços praticados em compras de material (CATMAT) pelo governo."
+    },
+    {
+      "name": "compras_pesquisar_preco_servico",
+      "description": "Pesquisa preços praticados em compras de serviço (CATSER)."
+    },
+    {
+      "name": "compras_pesquisar_precos_para_etp",
+      "description": "Agrega preços praticados aplicando metodologia IN SEGES/ME 65/2021."
+    },
+    {
+      "name": "compras_pgc_agregacao",
+      "description": "Resumo agregado do PGC de um órgão num ano (totais por categoria)."
+    },
+    {
+      "name": "compras_pgc_listar",
+      "description": "Lista itens de PGC (Plano de Gestão de Contratações) do governo federal."
+    },
+    {
+      "name": "compras_pgc_listar_csv",
+      "description": "Versão CSV de `compras_pgc_listar` (mesmo dataset, formato planilha)."
+    },
+    {
+      "name": "compras_pgc_por_catalogo",
+      "description": "Lista todos os PGCs que incluem determinado item de catálogo (CATMAT/CATSER)."
+    },
+    {
+      "name": "compras_pncp_atas_listar",
+      "description": "Lista atas registradas no PNCP no período (federal + estadual + municipal)."
+    },
+    {
+      "name": "compras_pncp_contratacao_item_resultados",
+      "description": "Lista resultados (vencedores) de um item específico de contratação no PNCP."
+    },
+    {
+      "name": "compras_pncp_contratacao_itens",
+      "description": "Lista itens de uma contratação no PNCP."
+    },
+    {
+      "name": "compras_pncp_contratacao_por_orgao",
+      "description": "Consulta uma contratação específica pelo CNPJ + ano + sequencial."
+    },
+    {
+      "name": "compras_pncp_contratacoes_atualizacao",
+      "description": "Lista contratações alteradas no período (PNCP)."
+    },
+    {
+      "name": "compras_pncp_contratacoes_proposta",
+      "description": "Lista contratações com prazo de proposta aberto no PNCP."
+    },
+    {
+      "name": "compras_pncp_contratacoes_publicacao",
+      "description": "Lista contratações publicadas no PNCP no período."
+    },
+    {
+      "name": "compras_pncp_contrato_por_orgao",
+      "description": "Consulta um contrato específico no PNCP."
+    },
+    {
+      "name": "compras_pncp_contratos_listar",
+      "description": "Lista contratos publicados no PNCP no período."
+    },
+    {
+      "name": "compras_pncp_modalidades",
+      "description": "Cheat sheet local: códigos de modalidade de contratação do PNCP."
+    },
+    {
+      "name": "compras_pncp_orgao_unidades",
+      "description": "Lista unidades administrativas de um órgão no PNCP."
+    },
+    {
+      "name": "compras_pncp_pca_atualizacao",
+      "description": "Lista PCAs atualizados num período (PNCP)."
+    },
+    {
+      "name": "compras_pncp_pca_listar",
+      "description": "Lista PCAs (Planos Anuais de Contratações) no PNCP."
+    },
+    {
+      "name": "compras_pncp_pca_por_classificacao_superior",
+      "description": "Lista itens de PCA filtrados por categoria superior do item."
+    },
+    {
+      "name": "compras_pncp_pca_por_usuario",
+      "description": "Lista PCAs vinculados a um usuário/sistema integrador específico."
+    },
+    {
+      "name": "compras_sancao_acordos_leniencia",
+      "description": "Lista acordos de leniência firmados com a CGU."
+    },
+    {
+      "name": "compras_sancao_ceaf",
+      "description": "Consulta CEAF — Cadastro de Expulsões da Administração Federal."
+    },
+    {
+      "name": "compras_sancao_ceis",
+      "description": "Consulta CEIS — Cadastro de Empresas Inidôneas e Suspensas."
+    },
+    {
+      "name": "compras_sancao_cepim",
+      "description": "Consulta CEPIM — Entidades Privadas Sem Fins Lucrativos Impedidas."
+    },
+    {
+      "name": "compras_sancao_cnep",
+      "description": "Consulta CNEP — Cadastro Nacional de Empresas Punidas (Lei Anticorrupção)."
+    },
+    {
+      "name": "compras_uasg_buscar",
+      "description": "Busca UASGs por trecho do nome (match parcial)."
+    },
+    {
+      "name": "compras_uasg_consultar",
+      "description": "Consulta uma UASG específica pelo código."
+    },
+    {
+      "name": "compras_uasg_listar",
+      "description": "Lista UASGs (Unidades Administrativas de Serviços Gerais) do governo."
+    },
+    {
+      "name": "compras_versao",
+      "description": "Healthcheck/diagnóstico do MCP. Retorna versão, fontes upstream e estado de configurações sensíveis."
+    }
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  }
+}

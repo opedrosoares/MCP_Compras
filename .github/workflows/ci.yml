@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Setup Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Smoke test (server in-process)
+        run: PYTHONPATH=src uv run python scripts/smoke_test.py
+
+      - name: Schema drift check
+        run: PYTHONPATH=src uv run python scripts/schema_snapshot.py check
+
+      - name: Pytest
+        run: uv run pytest -q
