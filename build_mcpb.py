@@ -24,6 +24,7 @@ INCLUDE = [
     "pyproject.toml",
     "bootstrap.py",
     "README.md",
+    "LICENSE",
     "icon.png",
     "src/compras_mcp/",
 ]
