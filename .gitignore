@@ -39,3 +39,6 @@ Thumbs.db
 *.log
 scratch/
 tmp/
+
+# Rascunhos locais
+/docs
