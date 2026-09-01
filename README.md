@@ -395,4 +395,8 @@ MIT — veja [LICENSE](LICENSE).
 
 ## Status
 
-v0.3.14 — 94 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
+v0.3.15 — 94 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
+
+<!-- Prova de propriedade do MCP Registry oficial: o validador procura este
+     token na long_description publicada no PyPI. Não remover. -->
+<!-- mcp-name: io.github.opedrosoares/mcp-compras -->

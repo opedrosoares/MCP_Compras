@@ -1,0 +1,54 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.opedrosoares/mcp-compras",
+  "title": "MCP Compras.gov.br",
+  "description": "Preços, atas, contratos e sanções das APIs públicas de compras do governo brasileiro",
+  "version": "0.3.15",
+  "websiteUrl": "https://github.com/opedrosoares/MCP_Compras",
+  "repository": {
+    "url": "https://github.com/opedrosoares/MCP_Compras",
+    "source": "github",
+    "id": "1338528305"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "compras-mcp",
+      "version": "0.3.15",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "TRANSPARENCIA_API_KEY",
+          "description": "Chave gratuita do Portal da Transparência (CGU). Habilita as tools de sanções (CEIS, CNEP, CEAF, CEPIM). Sem ela, as demais tools seguem funcionando. Cadastro: api.portaldatransparencia.gov.br/api-de-dados/cadastrar-email",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "REDIS_URL",
+          "description": "Opcional. Compartilha o cache TTL entre processos; sem ela o cache fica em memória local.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "INCLUIR_CPF_COMPLETO",
+          "description": "Default 'false': CPFs de servidores vêm mascarados (123.***.***-45) por LGPD. Use 'true' apenas quando estritamente necessário.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string",
+          "default": "false"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp-compras.up.railway.app/mcp"
+    }
+  ]
+}
