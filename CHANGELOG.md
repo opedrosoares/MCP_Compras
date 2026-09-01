@@ -4,6 +4,35 @@ Todas as mudanças notáveis. Cada release foi descoberto em bateria E2E
 real contra o servidor em produção (Railway + Redis) e validado por
 probe direto ao upstream antes do fix.
 
+## [0.3.15] — 2026-09-01
+
+Release de superfície de confiança, não de correção de bug. Origem: auditoria
+externa do M8ven Trust Index apontou que as 94 tools não declaravam nenhum dos
+quatro hints do protocolo MCP.
+
+### Added
+
+- **Annotations nas 94 tools**: `readOnlyHint`, `destructiveHint`,
+  `idempotentHint` e `openWorldHint` declarados explicitamente via a constante
+  `SOMENTE_LEITURA` em `mcp_instance.py`. Todas as tools são wrappers de
+  consulta — nenhuma escreve no upstream. Hosts MCP e diretórios tratam hint
+  **ausente** como *desconhecido*, não como falso; sem eles o cliente não tinha
+  como avisar o usuário antes de invocar, e o diretório da OpenAI rejeita tools
+  com qualquer um dos quatro faltando.
+- **`tests/test_tools_registry.py`**: as 94 tools nomeadas literalmente, cada
+  uma virando caso de teste próprio via `parametrize` (282 casos). Pega tool
+  renomeada, removida, registrada por engano ou que perdeu annotations.
+- **Hints no snapshot de schema**: `scripts/schema_snapshot.py` passa a gravar
+  as annotations, então perder um hint quebra o *schema drift check* da CI em
+  vez de só aparecer em auditoria externa.
+
+### Changed
+
+- **`bootstrap.py`**: criação do venv migrada de `subprocess.run([sys.executable,
+  "-m", "venv", ...])` para `venv.EnvBuilder` (stdlib, sem processo filho).
+  O `os.execv` do final permanece — é o que preserva stdin/stdout para o
+  transporte stdio do MCP. Nenhum comando do arquivo passa por shell.
+
 ## [0.3.14] — 2026-08-05
 
 Patch encontrado validando a 0.3.13 **em produção**, não em teste local.

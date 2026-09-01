@@ -48,8 +48,15 @@ async def _dump() -> dict:
     for name in sorted(tools.keys()):
         t = tools[name]
         params = t.parameters if isinstance(t.parameters, dict) else {}
+        # Hints entram no snapshot para que perder uma annotation conte como
+        # drift em CI, e não só como achado de auditoria externa.
+        annotations = {
+            hint: getattr(t.annotations, hint, None)
+            for hint in ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")
+        }
         out["tools"][name] = _normalize(
             {
+                "annotations": annotations,
                 "description": (t.description or "").strip(),
                 "parameters": params,
             }

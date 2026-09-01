@@ -37,7 +37,7 @@ from compras_mcp.access_control import apply_lgpd, aviso_lgpd
 from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.base import format_date
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import ListarPaginadoInput
 from compras_mcp.tools._helpers import (
     desc,
@@ -63,7 +63,7 @@ def _ck(*parts: Any) -> str:
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratos_listar(
     codigo_orgao: Annotated[
         int,
@@ -167,7 +167,7 @@ async def compras_contratos_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratos_consultar(
     codigo: Annotated[
         str,
@@ -224,7 +224,7 @@ async def compras_contratos_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratos_listar_por_fim_vigencia(
     codigo_orgao: Annotated[
         int,
@@ -288,7 +288,7 @@ async def compras_contratos_listar_por_fim_vigencia(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratos_itens_listar(
     codigo_orgao: Annotated[
         int,
@@ -371,7 +371,7 @@ async def compras_contratos_itens_listar(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_comprasnet_consultar(
     id_contrato: Annotated[
         int,
@@ -410,7 +410,7 @@ async def compras_contrato_comprasnet_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_comprasnet_por_uasg(
     codigo_uasg: Annotated[
         int, Field(description="Código UASG (5-6 dígitos).")
@@ -545,7 +545,7 @@ async def _ct_subrecurso(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_historico_aditivos(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -560,7 +560,7 @@ async def compras_contrato_historico_aditivos(
     return await _ct_subrecurso(id_contrato, "historico", "ct_historico", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_garantias(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -575,7 +575,7 @@ async def compras_contrato_garantias(
     return await _ct_subrecurso(id_contrato, "garantias", "ct_garantias", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_faturas(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -593,7 +593,7 @@ async def compras_contrato_faturas(
     return await _ct_subrecurso(id_contrato, "faturas", "ct_faturas", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_ocorrencias(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -609,7 +609,7 @@ async def compras_contrato_ocorrencias(
     return await _ct_subrecurso(id_contrato, "ocorrencias", "ct_ocorrencias", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_responsaveis(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -624,7 +624,7 @@ async def compras_contrato_responsaveis(
     return await _ct_subrecurso(id_contrato, "responsaveis", "ct_responsaveis", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_empenhos(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -639,7 +639,7 @@ async def compras_contrato_empenhos(
     return await _ct_subrecurso(id_contrato, "empenhos", "ct_empenhos", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_publicacoes(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
@@ -654,7 +654,7 @@ async def compras_contrato_publicacoes(
     return await _ct_subrecurso(id_contrato, "publicacoes", "ct_publicacoes", pagina, tamanho_pagina)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contrato_cronograma(
     id_contrato: Annotated[int, Field(description="ID do contrato no Comprasnet.")],
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,

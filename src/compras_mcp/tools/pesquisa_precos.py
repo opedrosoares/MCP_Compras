@@ -24,7 +24,7 @@ from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.base import format_date
 from compras_mcp.config import get_settings
 from compras_mcp.errors import ComprasNotFoundError
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     PesquisarPrecoMaterialInput,
     PesquisarPrecoServicoInput,
@@ -137,7 +137,7 @@ def _resposta_rota_indisponivel(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pesquisar_preco_material(
     codigo_item_catalogo: Annotated[
         int, Field(description=desc(PesquisarPrecoMaterialInput, "codigo_item_catalogo"))
@@ -247,7 +247,7 @@ async def compras_pesquisar_preco_material(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_detalhar_preco_material(
     codigo_item_catalogo: Annotated[
         int, Field(description=desc(PesquisarPrecoMaterialInput, "codigo_item_catalogo"))
@@ -327,7 +327,7 @@ async def compras_detalhar_preco_material(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pesquisar_preco_servico(
     codigo_item_catalogo: Annotated[
         int, Field(description=desc(PesquisarPrecoServicoInput, "codigo_item_catalogo"))
@@ -407,7 +407,7 @@ async def compras_pesquisar_preco_servico(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_detalhar_preco_servico(
     codigo_item_catalogo: Annotated[
         int, Field(description=desc(PesquisarPrecoServicoInput, "codigo_item_catalogo"))

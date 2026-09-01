@@ -21,7 +21,7 @@ from pydantic import Field
 
 from compras_mcp.cache import cache_from_env
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ConsultarFornecedorInput,
     ListarPaginadoInput,
@@ -51,7 +51,7 @@ def _so_digitos(s: str | None) -> str | None:
     return "".join(c for c in s if c.isdigit())
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_fornecedor_consultar(
     cnpj_cpf: Annotated[
         str, Field(description=desc(ConsultarFornecedorInput, "cnpj_cpf"))
@@ -101,7 +101,7 @@ async def compras_fornecedor_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_fornecedor_listar(
     cnpj: Annotated[
         str | None,
@@ -194,7 +194,7 @@ async def compras_fornecedor_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_fornecedor_impedimentos_por_itens(
     codigos_catmat: Annotated[
         list[int] | None,
@@ -251,7 +251,7 @@ async def compras_fornecedor_impedimentos_por_itens(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_fornecedor_contratos_por_item(
     codigos_catmat: Annotated[
         list[int] | None,

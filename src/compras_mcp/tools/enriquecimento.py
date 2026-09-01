@@ -20,7 +20,7 @@ from pydantic import Field
 from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.cnpj import make_cnpj_client
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.tools._helpers import with_latency
 
 _cnpj_cache = cache_from_env("CNPJ_RECEITA", default_ttl=86400, default_max_size=500)
@@ -30,7 +30,7 @@ def _so_digitos(s: str) -> str:
     return "".join(c for c in s if c.isdigit())
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_fornecedor_cnpj_receita(
     cnpj: Annotated[
         str,

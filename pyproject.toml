@@ -1,6 +1,6 @@
 [project]
 name = "compras-mcp"
-version = "0.3.14"
+version = "0.3.15"
 description = "MCP server unificando APIs públicas do Compras.gov.br (Dados Abertos, PNCP e Portal da Transparência) para apoio a ETP, TR e demais documentos de contratação pela Lei 14.133/2021."
 readme = "README.md"
 requires-python = ">=3.11"

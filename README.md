@@ -1,5 +1,6 @@
 # MCP Compras.gov.br
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/opedrosoares-mcp-compras-1wrbus?v=bf512ced4090ecbb6958bbd911c20716)](https://m8ven.ai/mcp/opedrosoares-mcp-compras-1wrbus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 [![FastMCP](https://img.shields.io/badge/FastMCP-2.x-informational)](https://github.com/jlowin/fastmcp)

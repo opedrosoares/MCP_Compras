@@ -6,6 +6,12 @@ as dependencias. Nas execucoes seguintes, apenas executa o servidor.
 
 Usa apenas a stdlib do Python para nao depender de pacotes externos
 antes do bootstrap.
+
+Nenhum comando passa por shell: a criação do venv usa `venv.EnvBuilder`
+(stdlib, sem processo filho) e a instalação usa `subprocess.run` com argv em
+lista e `shell=False` — não há interpolação de string nem entrada do usuário
+em nenhum dos dois. O `os.execv` do final substitui este processo pelo
+servidor para preservar stdin/stdout, que o transporte stdio do MCP exige.
 """
 
 from __future__ import annotations
@@ -14,6 +20,7 @@ import os
 import platform
 import subprocess
 import sys
+import venv
 from pathlib import Path
 
 VENV_HOME = Path.home() / ".mcp-compras"
@@ -36,10 +43,7 @@ def setup() -> None:
     """Cria venv e instala o pacote na primeira execucao."""
     print("Compras MCP: configurando ambiente (primeira execucao)...", file=sys.stderr)
     VENV_HOME.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [sys.executable, "-m", "venv", str(VENV_DIR)],
-        check=True,
-    )
+    venv.EnvBuilder(with_pip=True).create(VENV_DIR)
     subprocess.run(
         [str(PYTHON), "-m", "pip", "install", "--quiet", str(SRC_DIR)],
         check=True,

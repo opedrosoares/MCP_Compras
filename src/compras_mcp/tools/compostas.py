@@ -30,7 +30,7 @@ from compras_mcp.clients.base import format_date
 from compras_mcp.clients.cnpj import make_cnpj_client
 from compras_mcp.config import get_settings
 from compras_mcp.errors import ComprasAuthError, ComprasNotFoundError
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     BuscarContratacoesSimilaresInput,
     CheckarSancoesFornecedorInput,
@@ -194,7 +194,7 @@ def _resumir_cluster(valores_ordenados: list[float]) -> dict[str, Any]:
     }
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pesquisar_precos_para_etp(
     tipo: Annotated[
         Literal["material", "servico"],
@@ -413,7 +413,7 @@ async def compras_pesquisar_precos_para_etp(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_checar_sancoes_fornecedor(
     cnpj: Annotated[
         str, Field(description=desc(CheckarSancoesFornecedorInput, "cnpj"))
@@ -501,7 +501,7 @@ async def compras_checar_sancoes_fornecedor(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_montar_dossie_arp(
     numero_controle_pncp_ata: Annotated[
         str,
@@ -764,7 +764,7 @@ async def compras_montar_dossie_arp(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_buscar_contratacoes_similares(
     codigo_catmat: Annotated[
         int | None,
@@ -926,7 +926,7 @@ async def compras_buscar_contratacoes_similares(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_perfil_fornecedor_completo(
     cnpj: Annotated[
         str,

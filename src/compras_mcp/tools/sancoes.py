@@ -27,7 +27,7 @@ from compras_mcp.access_control import apply_lgpd, aviso_lgpd
 from compras_mcp.cache import cache_from_env
 from compras_mcp.config import get_settings
 from compras_mcp.errors import ComprasWafBlockError
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ConsultarSancaoCNPJInput,
     ConsultarSancaoCPFInput,
@@ -84,7 +84,7 @@ def _resposta_waf_block(cadastro: str, filtros: dict[str, Any]) -> dict[str, Any
     }
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_sancao_ceis(
     cnpj: Annotated[
         str | None,
@@ -148,7 +148,7 @@ async def compras_sancao_ceis(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_sancao_cnep(
     cnpj: Annotated[
         str | None,
@@ -200,7 +200,7 @@ async def compras_sancao_cnep(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_sancao_ceaf(
     cpf: Annotated[
         str | None,
@@ -255,7 +255,7 @@ async def compras_sancao_ceaf(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_sancao_cepim(
     cnpj: Annotated[
         str | None,
@@ -307,7 +307,7 @@ async def compras_sancao_cepim(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_sancao_acordos_leniencia(
     cnpj: Annotated[
         str | None,

@@ -17,7 +17,7 @@ from pydantic import Field
 
 from compras_mcp.cache import cache_from_env
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     BuscarItemCatalogoInput,
     ConsultarCatmatInput,
@@ -44,7 +44,7 @@ def _cache_key(*parts: Any) -> str:
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catmat_listar_grupos(
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
     tamanho_pagina: Annotated[
@@ -78,7 +78,7 @@ async def compras_catmat_listar_grupos(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catmat_listar_classes(
     codigo_grupo: Annotated[
         int | None,
@@ -122,7 +122,7 @@ async def compras_catmat_listar_classes(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catmat_consultar(
     codigo_item: Annotated[
         int, Field(description=desc(ConsultarCatmatInput, "codigo_item"))
@@ -161,7 +161,7 @@ async def compras_catmat_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catmat_buscar(
     termo: Annotated[str, Field(description=desc(BuscarItemCatalogoInput, "termo"))],
     codigo_grupo: Annotated[
@@ -314,7 +314,7 @@ async def compras_catmat_buscar(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catser_listar_secoes(
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
     tamanho_pagina: Annotated[
@@ -348,7 +348,7 @@ async def compras_catser_listar_secoes(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catser_listar_classes(
     codigo_grupo: Annotated[
         int | None,
@@ -386,7 +386,7 @@ async def compras_catser_listar_classes(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catser_consultar(
     codigo_item: Annotated[
         int, Field(description=desc(ConsultarCatserInput, "codigo_item"))

@@ -21,7 +21,7 @@ from pydantic import Field
 from compras_mcp.cache import cache_from_env
 from compras_mcp.config import get_settings
 from compras_mcp.errors import ComprasNotFoundError
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ConsultarUasgInput,
     ListarOrgaosInput,
@@ -154,7 +154,7 @@ def _resposta_uasg_404(endpoint_path: str) -> dict[str, Any]:
     }
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_uasg_listar(
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
     tamanho_pagina: Annotated[
@@ -223,7 +223,7 @@ async def compras_uasg_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_uasg_consultar(
     codigo_uasg: Annotated[
         int, Field(description=desc(ConsultarUasgInput, "codigo_uasg"))
@@ -279,7 +279,7 @@ async def compras_uasg_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_orgao_listar(
     pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
     tamanho_pagina: Annotated[
@@ -356,7 +356,7 @@ async def compras_orgao_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_orgao_consultar(
     codigo_orgao: Annotated[
         int,
@@ -397,7 +397,7 @@ async def compras_orgao_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_orgao_unidades(
     cnpj: Annotated[
         str,
@@ -478,7 +478,7 @@ async def compras_pncp_orgao_unidades(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_uasg_buscar(
     termo: Annotated[
         str,

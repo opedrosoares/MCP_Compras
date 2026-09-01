@@ -39,7 +39,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.tools._helpers import with_latency
 
 
@@ -67,7 +67,7 @@ def _argumento_to_dict(arg: Any) -> dict[str, Any]:
     }
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_listar_prompts() -> dict[str, Any]:
     """Lista os MCP Prompts disponíveis com nome, descrição e argumentos.
 
@@ -115,7 +115,7 @@ async def compras_listar_prompts() -> dict[str, Any]:
     return with_latency({"total": len(out), "prompts": out}, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_obter_prompt(
     nome: Annotated[
         str,
@@ -208,7 +208,7 @@ async def compras_obter_prompt(
     )
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_listar_resources() -> dict[str, Any]:
     """Lista os MCP Resources disponíveis com URI, nome e mime-type.
 
@@ -247,7 +247,7 @@ async def compras_listar_resources() -> dict[str, Any]:
     return with_latency({"total": len(out), "resources": out}, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_obter_resource(
     uri: Annotated[
         str,
