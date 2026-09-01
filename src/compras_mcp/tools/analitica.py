@@ -33,7 +33,7 @@ from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.base import format_date
 from compras_mcp.config import get_settings
 from compras_mcp.esfera import ESFERA_VALORES, matches_esfera
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.tools._helpers import make_pncp, with_latency
 
 _analitica_cache = cache_from_env(
@@ -202,7 +202,7 @@ async def _varrer_paginado(
     }
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_aggregate_contratacoes_por_periodo(
     data_inicial: Annotated[
         date,
@@ -456,7 +456,7 @@ async def compras_aggregate_contratacoes_por_periodo(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_comparar_periodos_contratacoes(
     periodo_a_inicio: Annotated[
         date, Field(description="Data inicial do período A (YYYY-MM-DD).")

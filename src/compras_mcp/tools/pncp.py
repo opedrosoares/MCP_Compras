@@ -38,7 +38,7 @@ from compras_mcp.esfera import (
     ESFERA_VALORES,
     aplicar_filtro_esfera_no_envelope,
 )
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ListarPaginadoInput,
     PNCPListarContratacoesInput,
@@ -141,7 +141,7 @@ def _resposta_pncp_singular_404(
     }
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratacoes_publicacao(
     data_inicial: Annotated[
         date, Field(description=desc(PNCPListarContratacoesInput, "data_inicial"))
@@ -240,7 +240,7 @@ async def compras_pncp_contratacoes_publicacao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratacoes_proposta(
     data_final: Annotated[
         date,
@@ -318,7 +318,7 @@ async def compras_pncp_contratacoes_proposta(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratacoes_atualizacao(
     data_inicial: Annotated[
         date, Field(description="Data inicial de atualização (YYYY-MM-DD).")
@@ -384,7 +384,7 @@ async def compras_pncp_contratacoes_atualizacao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratacao_por_orgao(
     cnpj: Annotated[
         str,
@@ -443,7 +443,7 @@ async def compras_pncp_contratacao_por_orgao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratacao_itens(
     cnpj: Annotated[
         str,
@@ -493,7 +493,7 @@ async def compras_pncp_contratacao_itens(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratacao_item_resultados(
     cnpj: Annotated[
         str,
@@ -554,7 +554,7 @@ async def compras_pncp_contratacao_item_resultados(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contratos_listar(
     data_inicial: Annotated[
         date, Field(description="Data inicial de publicação do contrato (YYYY-MM-DD).")
@@ -610,7 +610,7 @@ async def compras_pncp_contratos_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_contrato_por_orgao(
     cnpj: Annotated[
         str,
@@ -659,7 +659,7 @@ async def compras_pncp_contrato_por_orgao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_modalidades() -> dict[str, Any]:
     """Cheat sheet local: códigos de modalidade de contratação do PNCP.
 

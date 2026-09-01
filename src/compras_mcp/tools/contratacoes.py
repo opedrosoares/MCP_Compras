@@ -26,7 +26,7 @@ from pydantic import Field
 from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.base import format_date
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ConsultarContratacao14133Input,
     ListarContratacoes14133Input,
@@ -54,7 +54,7 @@ def _ck(*parts: Any) -> str:
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratacoes_14133_listar(
     data_inicial_publicacao: Annotated[
         date | None,
@@ -165,7 +165,7 @@ async def compras_contratacoes_14133_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratacoes_14133_consultar(
     id_contratacao: Annotated[
         int,
@@ -206,7 +206,7 @@ async def compras_contratacoes_14133_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratacoes_14133_itens_listar(
     data_inicial_inclusao: Annotated[
         date,
@@ -255,7 +255,7 @@ async def compras_contratacoes_14133_itens_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratacoes_14133_itens_por_contratacao(
     id_contratacao: Annotated[
         int,
@@ -291,7 +291,7 @@ async def compras_contratacoes_14133_itens_por_contratacao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratacoes_14133_resultados_listar(
     data_inicial_resultado: Annotated[
         date,
@@ -341,7 +341,7 @@ async def compras_contratacoes_14133_resultados_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_contratacoes_14133_resultados_por_contratacao(
     id_contratacao: Annotated[
         int,
@@ -379,7 +379,7 @@ async def compras_contratacoes_14133_resultados_por_contratacao(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_legado_licitacoes_listar(
     data_publicacao_inicial: Annotated[
         date,
@@ -459,7 +459,7 @@ async def compras_legado_licitacoes_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_legado_licitacao_consultar(
     id_compra: Annotated[
         str,
@@ -496,7 +496,7 @@ async def compras_legado_licitacao_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_legado_itens_licitacao_listar(
     modalidade: Annotated[
         int,
@@ -555,7 +555,7 @@ async def compras_legado_itens_licitacao_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_legado_pregoes_listar(
     dt_data_edital_inicial: Annotated[
         date,
@@ -633,7 +633,7 @@ async def compras_legado_pregoes_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_legado_compras_sem_licitacao(
     dt_ano_aviso: Annotated[
         int,
@@ -695,7 +695,7 @@ async def compras_legado_compras_sem_licitacao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_legado_rdc_listar(
     data_publicacao_min: Annotated[
         date,

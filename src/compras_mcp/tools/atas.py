@@ -41,7 +41,7 @@ from compras_mcp.errors import (
     ComprasServerError,
     ComprasTimeoutError,
 )
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ListarPaginadoInput,
     PNCPListarAtasInput,
@@ -68,7 +68,7 @@ def _ck(*parts: Any) -> str:
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_listar(
     data_vigencia_inicial_min: Annotated[
         date,
@@ -176,7 +176,7 @@ _RX_ID_ATA = re.compile(r"^\d{14}-\d+-\d+/\d{4}-\d{6}$")
 _RX_ID_COMPRA = re.compile(r"^\d{14}-\d+-\d+/\d{4}$")
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_consultar(
     numero_controle_pncp_ata: Annotated[
         str,
@@ -269,7 +269,7 @@ async def compras_arp_consultar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_por_fim_vigencia(
     data_vigencia_final_min: Annotated[
         date,
@@ -338,7 +338,7 @@ async def compras_arp_por_fim_vigencia(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_buscar_por_objeto(
     palavra_chave: Annotated[
         str,
@@ -513,7 +513,7 @@ async def compras_arp_buscar_por_objeto(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_itens_listar(
     data_vigencia_inicial_min: Annotated[
         date,
@@ -599,7 +599,7 @@ async def compras_arp_itens_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_unidades_item(
     numero_ata: Annotated[
         str,
@@ -652,7 +652,7 @@ async def compras_arp_unidades_item(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_saldo_item(
     numero_ata: Annotated[
         str,
@@ -802,7 +802,7 @@ async def compras_arp_saldo_item(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_arp_adesoes_item(
     numero_ata: Annotated[
         str,
@@ -856,7 +856,7 @@ async def compras_arp_adesoes_item(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_atas_listar(
     data_inicial: Annotated[
         date, Field(description=desc(PNCPListarAtasInput, "data_inicial"))

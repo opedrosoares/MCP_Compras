@@ -23,7 +23,7 @@ from pydantic import Field
 
 from compras_mcp.config import get_settings
 from compras_mcp.logging_setup import configure_logging
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import HealthcheckInput, VersaoOutput
 from compras_mcp.tools._helpers import desc
 from compras_mcp.upstream_probe import (
@@ -69,7 +69,7 @@ def measure_ms(started: float) -> float:
     return round((time.perf_counter() - started) * 1000, 1)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_versao() -> dict[str, Any]:
     """Healthcheck/diagnóstico do MCP. Retorna versão, fontes upstream e
     estado de configurações sensíveis (sem expor valores).
@@ -99,7 +99,7 @@ async def compras_versao() -> dict[str, Any]:
     return result
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_healthcheck(
     profundidade: Annotated[
         Literal["basico", "rotas"],

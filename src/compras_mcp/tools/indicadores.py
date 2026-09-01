@@ -28,7 +28,7 @@ from pydantic import Field
 
 from compras_mcp.cache import cache_from_env
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.tools._helpers import (
     envelope_dados_abertos,
     make_dados_abertos,
@@ -45,7 +45,7 @@ def _ck(*parts: Any) -> str:
     return "|".join("" if p is None else str(p) for p in parts)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_indicadores_consolidados(
     pagina: Annotated[int, Field(description="Página (1-based). Padrão 1.")] = 1,
     tamanho_pagina: Annotated[
@@ -86,7 +86,7 @@ async def compras_indicadores_consolidados(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_indicadores_por_periodo(
     ano: Annotated[
         int,

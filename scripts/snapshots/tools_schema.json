@@ -165,6 +165,12 @@
   },
   "tools": {
     "compras_aggregate_contratacoes_por_periodo": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Série temporal de contratações no PNCP por bucket.\n\n**Modo `count` (recomendado para tendência)**: 1 chamada por bucket\nlendo apenas `totalRegistros`. Janelas grandes (até 5 anos) são viáveis.\n\n**Modo `valor_*`**: varre todas as páginas de cada bucket para somar.\nMais lento; limita-se a `MAX_PAGES_PER_BUCKET=25` páginas (× 500 itens =\n12.500 registros máx por bucket). Sinaliza `truncado=true` quando bate\no teto.\n\nConcurrency interna: 4 calls simultâneas. Cache 30 min.",
       "parameters": {
         "properties": {
@@ -239,6 +245,12 @@
       }
     },
     "compras_arp_adesoes_item": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista adesões (caronas) já realizadas a uma ARP.\n\nEndpoint Dados Abertos `/modulo-arp/5_consultarAdesoesItem`. Mostra\nquem aderiu e com que quantidade — indica nível de demanda e quanto\nainda resta no limite legal de adesões.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -274,6 +286,12 @@
       }
     },
     "compras_arp_buscar_por_objeto": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Busca ARPs vigentes cujo `objeto` contém uma palavra-chave.\n\nResolve a limitação do endpoint `/modulo-arp/1.2_consultarARP_FimVigencia`,\nque não aceita filtro por texto: pagina internamente até `max_paginas_varridas`\ne filtra client-side por presença de `palavra_chave` (case-insensitive,\ncom normalização de acentos). Curto-circuita quando atinge `max_resultados`.\n\nO servidor faz o trabalho que antes era pedido ao LLM — sem isso, o\nroteiro `oportunidades_carona_arp` esbarrava em 169k ARPs vigentes e\n339 páginas. Achado da bateria A v0.3.5.\n\n**Limitação conhecida**: o schema upstream de ARP **não traz UF** no\nitem — só `nomeOrgao` e `nomeUnidadeGerenciadora`. Para filtrar por\nUF, cruze os matches com `compras_uasg_consultar` usando\n`codigoUnidadeGerenciadora` e compare `unidade.uf`. Não tentamos esse\ncruzamento aqui para manter a tool barata e previsível.\n\nOutput:\n    {\n      \"resultado\": [<ARPs que casaram>],\n      \"total_examinadas\": int,\n      \"matches\": int,\n      \"paginas_varridas\": int,\n      \"curto_circuitou\": bool,\n      \"_filtro_objeto\": {...}\n    }\n\nCache 15 min por (palavra_chave + janela + caps).",
       "parameters": {
         "properties": {
@@ -316,6 +334,12 @@
       }
     },
     "compras_arp_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta uma ARP específica pelo identificador PNCP.\n\nEndpoint Dados Abertos `/modulo-arp/1.1_consultarARP_Id`. Devolve o\ncabeçalho completo da ata (vigência, modalidade, gerenciadora, valores).\n\nQuando o `numero_controle_pncp_ata` vem no formato de **compra** (sem\no sufixo `-NNNNNN` que numera a ata), a tool detecta e devolve\ndiagnóstico explícito em vez de propagar `encontrada=false` silencioso.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -331,6 +355,12 @@
       }
     },
     "compras_arp_itens_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de ARPs na janela de vigência informada.\n\nEndpoint Dados Abertos `/modulo-arp/2_consultarARPItem`. O upstream\nexige `dataVigenciaInicialMin/Max` (janela ≤365 dias). Use filtros\nopcionais para localizar atas com um item específico.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -411,6 +441,12 @@
       }
     },
     "compras_arp_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista Atas de Registro de Preço (ARPs) por janela de início de vigência.\n\nEndpoint Dados Abertos `/modulo-arp/1_consultarARP`. O upstream exige\njanela `dataVigenciaInicialMin/Max` (≤ 365 dias). Para listar atas\npróximas do vencimento, use `compras_arp_por_fim_vigencia`.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -479,6 +515,12 @@
       }
     },
     "compras_arp_por_fim_vigencia": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista ARPs cuja vigência termina dentro do intervalo informado.\n\nEndpoint Dados Abertos `/modulo-arp/1.2_consultarARP_FimVigencia`.\nPermite ao gestor identificar atas próximas do vencimento.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -523,6 +565,12 @@
       }
     },
     "compras_arp_saldo_item": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Devolve o **saldo** (quantidade ainda disponível) por item da ARP.\n\nEndpoint Dados Abertos `/modulo-arp/4_consultarEmpenhosSaldoItem`.\n**Crítico para adesão**: a ata pode estar vigente mas com saldo\nzerado. Sem saldo, não há como aderir.\n\n**Estrutura do payload**: o upstream retorna **1 linha por\n(numeroItem, unidade, tipo)** — onde `tipo` pode ser `GERENCIADORA`,\n`PARTICIPANTE` etc. O mesmo `numeroItem` aparece várias vezes quando\nhá múltiplas unidades alocadas (carona ou rateio). **Não é\nduplicação** — são alocações distintas dentro da mesma ata.\n\nPara evitar confusão (achado bateria A v0.3.5), além do `resultado`\ncru, anexamos `resumo_por_item`: dicionário agregando por\n`numeroItem` com soma das quantidades registradas/empenhadas e\nsaldo total — pronto para decisão de adesão.\n\nCache 15 min (saldo muda ao longo do dia).",
       "parameters": {
         "properties": {
@@ -553,6 +601,12 @@
       }
     },
     "compras_arp_unidades_item": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista UGs participantes (potenciais caronas) de um item da ARP.\n\nEndpoint Dados Abertos `/modulo-arp/3_consultarUnidadesItem`. Determina\nquais unidades podem usar a ata como carona (adesão).\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -588,6 +642,12 @@
       }
     },
     "compras_buscar_contratacoes_similares": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Federa Dados Abertos + PNCP buscando contratações similares.\n\nComposição: consulta resultados homologados (Dados Abertos 14.133) +\npublicações PNCP filtrando pelo CATMAT/CATSER do item alvo, deduplica\npor CNPJ órgão + ano + sequencial e devolve os `max_resultados` mais\nrecentes. Insumo para mapear benchmarks de outros órgãos.\n\n**Atenção latência**: chama o PNCP em 3 modalidades (Pregão, Dispensa,\nConcorrência) em paralelo. Cada chamada PNCP costuma levar 30-60s — o\ntempo total da composta tende a 60-90s quando o cache está frio. Com\nRedis configurado as chamadas seguintes voltam em <1s.",
       "parameters": {
         "properties": {
@@ -642,6 +702,12 @@
       }
     },
     "compras_catmat_buscar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Busca itens CATMAT.\n\n**⚠️ Atenção upstream**: o filtro textual `descricao` do Dados Abertos\nestá ignorando o valor enviado e devolvendo o universo CATMAT inteiro\n(~340k itens, começando por arma de fogo) desde meados de 2026.\nConfirmado via probe direto. Os filtros estruturais (`codigo_grupo`,\n`codigo_classe`, `codigo_pdm`) continuam funcionando.\n\n**Workflow recomendado enquanto o filtro textual não voltar**:\n1. `compras_catmat_listar_grupos()` → escolher o grupo (ex.: 71=Mobiliários).\n2. `compras_catmat_listar_classes(codigo_grupo=71)` → escolher a classe\n   (ex.: 7110=Mobiliário para Escritório).\n3. `compras_catmat_buscar(termo='cadeira', codigo_grupo=71, codigo_classe=7110)`\n   → o `termo` ainda é enviado (mantém compatibilidade), mas a redução\n   real virá dos códigos estruturais.\n\nEsta tool emite `_aviso_filtro` no payload quando detecta que o upstream\ndevolveu o universo inteiro.\n\nCache 24h por (termo + filtros + página).",
       "parameters": {
         "properties": {
@@ -691,6 +757,12 @@
       }
     },
     "compras_catmat_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta detalhes de um item CATMAT específico pelo código.\n\nDevolve nome do item, PDM, grupo, classe, características, NCM e\nunidades de fornecimento. Útil para confirmar o código antes de\nfazer pesquisa de preços ou listar contratações similares.\n\nCache de 24h.",
       "parameters": {
         "properties": {
@@ -706,6 +778,12 @@
       }
     },
     "compras_catmat_listar_classes": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista as classes do CATMAT, opcionalmente filtradas por grupo.\n\nClasses são o segundo nível da hierarquia (ex.: dentro do grupo 71\nMobiliário, a classe 7110 é \"Mobiliário de escritório\").\n\nCache de 24h.",
       "parameters": {
         "properties": {
@@ -736,6 +814,12 @@
       }
     },
     "compras_catmat_listar_grupos": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista os grupos do CATMAT (Catálogo de Materiais).\n\nGrupos são o nível mais alto da hierarquia CATMAT (ex.: 10=ARMAMENTO,\n11=MATERIAIS BÉLICOS NUCLEARES). Use esta tool para enquadrar a\ncontratação no grupo correto antes de descer para classes/PDM/itens.\n\nCache de 24h: os grupos mudam muito raramente. Total atual ~79 grupos.",
       "parameters": {
         "properties": {
@@ -754,6 +838,12 @@
       }
     },
     "compras_catser_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta detalhes de um item CATSER pelo código.\n\nDevolve nome do serviço, descrição, seção/divisão/grupo/classe e\nunidades de medida. Use para confirmar o código antes de pesquisar\npreços ou contratações similares.\n\nCache de 24h.",
       "parameters": {
         "properties": {
@@ -769,6 +859,12 @@
       }
     },
     "compras_catser_listar_classes": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista as classes CATSER, opcionalmente filtradas por grupo.\n\nCache de 24h.",
       "parameters": {
         "properties": {
@@ -799,6 +895,12 @@
       }
     },
     "compras_catser_listar_secoes": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista as seções do CATSER (Catálogo de Serviços).\n\nSeções são o nível mais alto da hierarquia CATSER (baseada no CPC ONU).\nUse para enquadrar a contratação de serviços em uma seção antes de\ndescer para divisões/grupos/classes/itens.\n\nCache de 24h.",
       "parameters": {
         "properties": {
@@ -817,6 +919,12 @@
       }
     },
     "compras_checar_sancoes_fornecedor": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consolida sanções de um fornecedor (CEIS + CNEP + CEPIM + leniência + impedimentos).\n\nComposição: chama em paralelo as listas do Portal da Transparência e os\nimpedimentos do Comprasnet. Retorna um veredito booleano + lista\nconsolidada de sanções ativas.\n\nLevanta `ComprasAuthError` se `TRANSPARENCIA_API_KEY` não estiver configurada.\nSempre use antes de homologar pregões/contratos. Cache 10 min.",
       "parameters": {
         "properties": {
@@ -832,6 +940,12 @@
       }
     },
     "compras_comparar_periodos_contratacoes": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Compara dois períodos lado a lado para a mesma modalidade.\n\nWrapper sobre `compras_aggregate_contratacoes_por_periodo` chamado duas\nvezes (granularidade='ano' implícita — soma todo o período em 1 bucket).\n\nRetorna totais de A e B + delta absoluto + delta percentual.\n\nCaso de uso típico: _\"Houve antecipação de licitações em Jun/2024 (ano\neleitoral) comparado a Jun/2025?\"_ Ou _\"As dispensas em Dez/2024 foram\nmaiores que Dez/2023 no mesmo órgão?\"_.",
       "parameters": {
         "properties": {
@@ -921,6 +1035,12 @@
       }
     },
     "compras_contratacoes_14133_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta uma contratação 14.133 pelo id interno.\n\nEndpoint `/modulo-contratacoes/1.1_consultarContratacoes_PNCP_14133_Id`.\nDevolve detalhes completos: objeto, valor estimado, modalidade,\ninstrumento convocatório, status no PNCP.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -936,6 +1056,12 @@
       }
     },
     "compras_contratacoes_14133_itens_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de contratações 14.133 incluídos no período.\n\nEndpoint `/modulo-contratacoes/2_consultarItensContratacoes_PNCP_14133`.\nÚtil para descobrir o que foi licitado em uma janela específica.",
       "parameters": {
         "properties": {
@@ -968,6 +1094,12 @@
       }
     },
     "compras_contratacoes_14133_itens_por_contratacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de uma contratação 14.133 específica.\n\nEndpoint `/modulo-contratacoes/2.1_consultarItensContratacoes_PNCP_14133_Id`.",
       "parameters": {
         "properties": {
@@ -993,6 +1125,12 @@
       }
     },
     "compras_contratacoes_14133_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratações da Lei 14.133 publicadas no PNCP (via Dados Abertos).\n\nEndpoint `/modulo-contratacoes/1_consultarContratacoes_PNCP_14133`.\nCobre pregões eletrônicos, dispensas, inexigibilidades e demais\nmodalidades da Nova Lei de Licitações no governo federal.\n\n**Atenção semântica**: o filtro `codigo_modalidade_dados_abertos` usa a\ntabela de modalidade do SIASG/Dados Abertos, NÃO o cheat sheet PNCP de\n`compras_pncp_modalidades`. Os payloads retornam ambos os campos\n(`codigoModalidade` do Dados Abertos e `modalidadeIdPncp` do PNCP) — use\n`modalidadeNome` para o nome amigável.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -1073,6 +1211,12 @@
       }
     },
     "compras_contratacoes_14133_resultados_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista resultados (homologações) de itens 14.133 no período.\n\nEndpoint `/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133`.\nDevolve fornecedor vencedor, valor adjudicado e quantitativo homologado —\nfonte primária de preço praticado para o ETP.",
       "parameters": {
         "properties": {
@@ -1105,6 +1249,12 @@
       }
     },
     "compras_contratacoes_14133_resultados_por_contratacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista resultados de uma contratação 14.133 específica.",
       "parameters": {
         "properties": {
@@ -1130,6 +1280,12 @@
       }
     },
     "compras_contrato_comprasnet_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta detalhe completo de um contrato no Comprasnet (/api/contrato/id/{id}).\n\nDevolve contrato com sub-recursos embutidos. CPFs mascarados por LGPD.\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -1145,6 +1301,12 @@
       }
     },
     "compras_contrato_comprasnet_por_uasg": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratos de uma UASG no Comprasnet.\n\n**Atenção**: o upstream `/api/contrato/ug/{uasg}` não suporta paginação —\ndevolve a lista completa em uma resposta única (pode passar de 1 MB). Esta\ntool fatia o resultado client-side conforme `pagina + tamanho_pagina` para\nevitar inundar o LLM.\n\nCache 15 min do payload completo; fatiamento por chamada é barato.",
       "parameters": {
         "properties": {
@@ -1175,6 +1337,12 @@
       }
     },
     "compras_contrato_cronograma": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista cronograma financeiro (/api/contrato/{id}/cronograma).\n\nPaginação client-side — alguns contratos têm 200+ entradas mensais.\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -1200,6 +1368,12 @@
       }
     },
     "compras_contrato_empenhos": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista empenhos do contrato (/api/contrato/{id}/empenhos).\n\nPaginação client-side. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -1225,6 +1399,12 @@
       }
     },
     "compras_contrato_faturas": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista NFs/faturas (/api/contrato/{id}/faturas).\n\nPaginação client-side. Cache 15 min. **Atenção LGPD**: o campo\n`infcomplementar` (texto livre) pode conter nome de servidor + matrícula\nSIAPE não estruturados — o mascaramento LGPD só cobre CPFs em campos\nnominais (cpf, niResponsavel, etc.).",
       "parameters": {
         "properties": {
@@ -1250,6 +1430,12 @@
       }
     },
     "compras_contrato_garantias": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista garantias contratuais (/api/contrato/{id}/garantias).\n\nPaginação client-side. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -1275,6 +1461,12 @@
       }
     },
     "compras_contrato_historico_aditivos": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista aditivos do contrato (/api/contrato/{id}/historico).\n\nPaginação client-side (upstream não pagina). Cache 15 min do payload completo.",
       "parameters": {
         "properties": {
@@ -1300,6 +1492,12 @@
       }
     },
     "compras_contrato_ocorrencias": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista ocorrências/penalidades (/api/contrato/{id}/ocorrencias).\n\nIndicador-chave da confiabilidade do fornecedor. Paginação client-side.\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -1325,6 +1523,12 @@
       }
     },
     "compras_contrato_publicacoes": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista publicações DOU (/api/contrato/{id}/publicacoes).\n\nPaginação client-side. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -1350,6 +1554,12 @@
       }
     },
     "compras_contrato_responsaveis": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista fiscais/gestores (/api/contrato/{id}/responsaveis).\n\nCPFs mascarados por LGPD (`123.***.***-45`). Paginação client-side. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -1375,6 +1585,12 @@
       }
     },
     "compras_contratos_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta um contrato no Dados Abertos (endpoint 1.1).\n\nO upstream exige `codigo + tipo`. Tipos aceitos pela API:\n`idCompra` e `numeroControlePncpContrato`.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -1399,6 +1615,12 @@
       }
     },
     "compras_contratos_itens_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de contratos (endpoint 2).\n\nUpstream exige `codigoOrgao + dataVigenciaInicialMin/Max`. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -1472,6 +1694,12 @@
       }
     },
     "compras_contratos_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratos federais (Dados Abertos /modulo-contratos/1).\n\nO upstream exige `codigoOrgao` + janela `dataVigenciaInicialMin/Max`\n(≤ 365 dias). Para sub-recursos detalhados (garantias, faturas,\nocorrências), use `compras_contrato_*` que consulta o Comprasnet.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -1557,6 +1785,12 @@
       }
     },
     "compras_contratos_listar_por_fim_vigencia": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratos com vencimento na janela informada (endpoint 1.2).\n\nInventário do que precisa renovar. Upstream exige `codigoOrgao` +\n`dataVigenciaFinalMin/Max` (≤ 365 dias). Cache 15 min.",
       "parameters": {
         "properties": {
@@ -1606,7 +1840,13 @@
       }
     },
     "compras_detalhar_preco_material": {
-      "description": "Detalha unitários de cada compra individual de um item CATMAT no período.\n\nEndpoint: `/modulo-pesquisa-preco/2_consultarMaterialDetalhe`. Devolve\nlinha por COMPRA (idCompra + item) com o valor unitário homologado.\nIdeal para amostragem detalhada quando o agente precisa montar uma\ntabela para colar no ETP.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Lista as compras individuais de um item CATMAT — **sem valor de preço**.\n\nEndpoint: `/modulo-pesquisa-preco/2_consultarMaterialDetalhe`.\n\n**⚠️ Esta tool não devolve preço.** Até a v0.3.12 a docstring prometia\n\"valor unitário homologado\"; auditoria de 2026-08-05 mostrou que o DTO\nupstream (`FtPesqPrecoCompraMaterialDetalheDTO`) tem exatamente 7 campos\ne nenhum deles é valor:\n\n    idCompra, idItemCompra, numeroItemCompra, codigoItemCatalogo,\n    objetoCompra, descricaoDetalhadaItem, dataAtualizacaoFato\n\nConfirmado nos dois sentidos: chamada crua ao upstream (fora da camada\ndo MCP) devolve as mesmas 7 chaves, e o contrato OpenAPI oficial\ndeclara as mesmas 7. Ou seja: **não somos nós que filtramos** — o campo\nnunca existiu nesta rota. A rota 4 (serviço detalhe) tem DTO idêntico.\n\n**Para preço unitário de material use `compras_pesquisar_preco_material`**,\nque devolve `precoUnitario`, `quantidade`, `dataCompra` e fornecedor por\ncompra — é a fonte correta para a amostragem da IN SEGES/ME 65/2021.\n\nUse esta tool apenas para: descrição detalhada do item como comprado,\nobjeto da compra e rastreio do `idCompra` para cruzar com outras bases.\n\nCache 10 min.",
       "parameters": {
         "properties": {
           "codigo_item_catalogo": {
@@ -1657,7 +1897,13 @@
       }
     },
     "compras_detalhar_preco_servico": {
-      "description": "Detalha unitários por compra individual de um serviço CATSER.\n\nEndpoint: `/modulo-pesquisa-preco/4_consultarServicoDetalhe`.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Lista as compras individuais de um serviço CATSER — **sem valor de preço**.\n\nEndpoint: `/modulo-pesquisa-preco/4_consultarServicoDetalhe`.\n\n**⚠️ Esta tool não devolve preço** (verificado 2026-08-05): o DTO\nupstream é idêntico ao da rota 2 — idCompra, idItemCompra,\nnumeroItemCompra, codigoItemCatalogo, objetoCompra,\ndescricaoDetalhadaItem, dataAtualizacaoFato. Nenhum campo de valor.\n\n**Para preço unitário de serviço use `compras_pesquisar_preco_servico`**,\nque devolve `precoUnitario` e fornecedor por compra.\n\nCache 10 min.",
       "parameters": {
         "properties": {
           "codigo_item_catalogo": {
@@ -1708,6 +1954,12 @@
       }
     },
     "compras_fornecedor_cnpj_receita": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Dados públicos do CNPJ na Receita Federal (via BrasilAPI/MinhaReceita).\n\nRetorna razão social, nome fantasia, situação cadastral, CNAE primário e\nsecundários, QSA (sócios), capital social, natureza jurídica, porte,\nendereço e datas de início de atividade e da situação cadastral.\n\n**Quando usar**: complemento do `compras_perfil_fornecedor_completo`\npara due diligence (avaliar porte, sócios, CNAEs vs objeto da licitação).\nOs dados são da Receita; este MCP **não** consulta sanções aqui — para\nisso use as tools de sanção (CEIS/CNEP/CEPIM/CEAF).\n\nCache 24h. Em caso de 404 ou erro upstream, retorna `encontrado=false`\ncom diagnóstico em `_erro` em vez de propagar exception.",
       "parameters": {
         "properties": {
@@ -1725,6 +1977,12 @@
       }
     },
     "compras_fornecedor_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta cadastro de um fornecedor pelo CNPJ ou CPF.\n\nEndpoint Dados Abertos `/modulo-fornecedor/1_consultarFornecedor`.\nDevolve razão social, CNAE, porte da empresa, natureza jurídica.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -1740,6 +1998,12 @@
       }
     },
     "compras_fornecedor_contratos_por_item": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratos e empenhos por itens (CATMAT/CATSER) no Comprasnet.\n\nEndpoint `POST /api/comprasnet/contratosempenhos`. Útil para descobrir\nquem fornece esses itens hoje no governo (potenciais participantes em\nnovos certames).\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -1778,6 +2042,12 @@
       }
     },
     "compras_fornecedor_impedimentos_por_itens": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta impedimentos no Comprasnet por lista de itens (CATMAT/CATSER).\n\nEndpoint `POST /api/comprasnet/compras/impedimentos`. Retorna fornecedores\nimpedidos de participar de contratações dos itens informados (sanções\naplicadas no SICAF). Essencial antes de homologar pregões eletrônicos.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -1816,6 +2086,12 @@
       }
     },
     "compras_fornecedor_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista fornecedores no Compras.gov.br com filtros estruturais.\n\nEndpoint Dados Abertos `/modulo-fornecedor/1_consultarFornecedor`. Use\npara mapear fornecedores potenciais por porte/CNAE — ex.: levantar\ntodas as MEs com CNAE de TI.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -1898,7 +2174,48 @@
         "type": "object"
       }
     },
+    "compras_healthcheck": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Diz, em ~30 segundos, o que está de pé neste servidor **agora**.\n\nEstende `compras_versao`: além de versão e configuração, dispara um\nprobe paralelo (timeout curto) contra as rotas upstream reais e\ndevolve a situação por módulo funcional.\n\nPor que existe: em 04/08/2026 a tool de pesquisa de preço de material\nestava quebrada havia semanas e ninguém sabia — a SEGES trocou a\nassinatura da rota sem versionar. A descoberta veio de um analista\ntentando usar a ferramenta. Antes de uma demonstração ou de instruir\nprocesso, rode isto: o objetivo é que a descoberta aconteça aqui, não\nno palco.\n\nArgs:\n    profundidade: `basico` responde só versão/config (instantâneo);\n        `rotas` (padrão) executa o probe upstream.\n    modulo: restringe o probe a um módulo (ex.: `pesquisa_preco`,\n        `atas`, `pncp`). Sem isso, testa todos.\n\nSituação por módulo:\n    - `ok`: todas as rotas responderam com os campos esperados.\n    - `degradado`: alguma rota caiu, ou respondeu 200 **sem** os campos\n      do contrato (ex.: rota de preço sem `precoUnitario`) — o modo de\n      falha silencioso que só o contrato de campos pega.\n    - `fora`: todas as rotas testáveis do módulo falharam.\n    - `pulado`: faltou credencial (ex.: TRANSPARENCIA_API_KEY).\n\nRota que estoura o relógio é reexecutada em série antes de virar\n`fora`: com dezenas de rotas em paralelo, uma rota apenas lenta seria\nreportada como quebrada. Quando passa na segunda tentativa, o campo\n`problemas` do módulo registra \"lenta sob carga\" em vez de escondê-lo.\n\nO campo `pronto_para_uso` é o resumo honesto: `False` quando existe\nqualquer módulo fora ou degradado.",
+      "parameters": {
+        "properties": {
+          "modulo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Restringe o probe a um módulo funcional: 'pesquisa_preco', 'catalogo', 'organizacoes', 'atas', 'contratacoes', 'contratos', 'fornecedores', 'indicadores', 'legado', 'planejamento', 'pncp', 'sancoes', 'comprasnet', 'enriquecimento'. Sem valor, testa todos."
+          },
+          "profundidade": {
+            "default": "rotas",
+            "description": "'rotas' (padrão) testa as rotas upstream reais em paralelo e devolve situação por módulo (ok/degradado/fora) em ~30s. 'basico' devolve só versão e configuração, sem tocar a rede.",
+            "enum": [
+              "basico",
+              "rotas"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
     "compras_indicadores_consolidados": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Métricas operacionais consolidadas da API Dados Abertos.\n\nEndpoint `/modulo-indicadores/1_consultarIndicadoresConsolidados`.\nRetorna: total de serviços disponíveis, total de requisições no\nperíodo, percentual de sucesso, latência média (ms), volume total\ne médio de download (GB). Útil para diagnóstico/observabilidade,\n**não** para indicadores de mercado público (ver docstring do módulo).\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -1919,6 +2236,12 @@
       }
     },
     "compras_indicadores_por_periodo": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Métricas operacionais da API por período (ano/mês).\n\nEndpoint Dados Abertos `/modulo-indicadores/2_consultarIndicadoresPorPeriodo`.\nRetorna métricas de USO da API (requisições, latência, downloads),\nnão dados de compras. Útil para análise temporal de disponibilidade\ndo upstream.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -1962,6 +2285,12 @@
       }
     },
     "compras_legado_compras_sem_licitacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista compras sem licitação (dispensa/inexigibilidade) do regime legado.\n\nEndpoint `/modulo-legado/5_consultarComprasSemLicitacao`. **Upstream\nexige `dt_ano_aviso`** (ano inteiro, ex.: 2024) — não janela de datas.",
       "parameters": {
         "properties": {
@@ -2059,6 +2388,12 @@
       }
     },
     "compras_legado_itens_licitacao_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de licitações legado (`/modulo-legado/2_consultarItemLicitacao`).\n\nUpstream exige `modalidade` obrigatório. Filtros opcionais: `uasg`,\n`numero_aviso`, `codigo_item_material/servico`, `cnpj_fornecedor`.",
       "parameters": {
         "properties": {
@@ -2144,6 +2479,12 @@
       }
     },
     "compras_legado_licitacao_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta uma licitação legado pelo id_compra.\n\nEndpoint `/modulo-legado/1.1_consultarLicitacao_Id`. Upstream exige\n`id_compra` (string), não um `id` numérico.",
       "parameters": {
         "properties": {
@@ -2159,6 +2500,12 @@
       }
     },
     "compras_legado_licitacoes_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista licitações do regime legado (Lei 8.666/93).\n\nEndpoint `/modulo-legado/1_consultarLicitacao`. **Bug upstream\nconfirmado**: o filtro `uasg`, embora documentado no swagger oficial,\nretorna HTTP 400 (\"Erro ao efetuar a consulta\") porque o atributo não\nexiste no modelo Hibernate da view (`TbVwLicitacao`). Por isso este\nparâmetro foi removido da assinatura.\n\nWorkaround se você precisar filtrar por UASG: liste sem filtro, depois\nfiltre client-side pelo campo `uasg` do resultado.",
       "parameters": {
         "properties": {
@@ -2227,6 +2574,12 @@
       }
     },
     "compras_legado_pregoes_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista pregões eletrônicos do regime legado.\n\nEndpoint `/modulo-legado/3_consultarPregoes`. **Bug upstream\nconfirmado**: os filtros `co_uasg` e `co_orgao`, embora documentados\nno swagger, retornam HTTP 400 com erro Hibernate\n`Could not resolve attribute 'TbVwPregaoId.coUasg'` porque os atributos\nnão existem no modelo da view. Por isso ambos foram removidos da\nassinatura.\n\nWorkaround para filtrar por UASG: chame sem filtro e filtre client-side\npelos campos `coUasg`/`coOrgao` do resultado.",
       "parameters": {
         "properties": {
@@ -2295,6 +2648,12 @@
       }
     },
     "compras_legado_rdc_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratações pelo RDC (Regime Diferenciado de Contratações).\n\nEndpoint `/modulo-legado/7_consultarRdc`. **Upstream usa\n`data_publicacao_min/max`** (note `min`/`max`, não `inicial`/`final`).\nRDC foi usado principalmente para obras dos megaeventos e da Copa —\nrelevância residual hoje.",
       "parameters": {
         "properties": {
@@ -2375,6 +2734,12 @@
       }
     },
     "compras_listar_prompts": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista os MCP Prompts disponíveis com nome, descrição e argumentos.\n\nTools de descoberta para clientes (como o Claude.ai web) que ainda\nnão expõem UI para prompts. Em Claude Desktop / Cursor / MCP Inspector,\nprompts aparecem em UI dedicada — esta tool é um caminho alternativo,\nnão substituto.\n\nUse depois `compras_obter_prompt(nome, argumentos)` para renderizar\num prompt específico.\n\nRetorno:\n    {\n      \"total\": int,\n      \"prompts\": [\n        {\n          \"nome\": str,\n          \"descricao\": str,\n          \"tags\": [str, ...],\n          \"argumentos\": [\n            {\"nome\": str, \"descricao\": str | None, \"obrigatorio\": bool},\n            ...\n          ]\n        },\n        ...\n      ]\n    }",
       "parameters": {
         "properties": {},
@@ -2382,6 +2747,12 @@
       }
     },
     "compras_listar_resources": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista os MCP Resources disponíveis com URI, nome e mime-type.\n\nTools de descoberta para clientes que não expõem UI de attachment de\nresources (como o Claude.ai web). Em Claude Desktop / Cursor / MCP\nInspector, resources aparecem em picker dedicado.\n\nResources contêm dados de referência estáticos (tabelas de domínio,\nglossário, metadados do servidor). Use `compras_obter_resource(uri)`\npara ler o conteúdo.\n\nRetorno:\n    {\n      \"total\": int,\n      \"resources\": [\n        {\"uri\": str, \"nome\": str, \"descricao\": str, \"mime_type\": str, \"tags\": [str,...]},\n        ...\n      ]\n    }",
       "parameters": {
         "properties": {},
@@ -2389,6 +2760,12 @@
       }
     },
     "compras_montar_dossie_arp": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Dossiê completo de uma ARP em uma chamada.\n\nComposição: cabeçalho via `/modulo-arp/1.1` (id PNCP) e — se `numero_item`\ninformado — saldo (4), adesões (5) e unidades participantes (3) em\nparalelo. Os 3 últimos endpoints usam a chave composta\n`numeroAta + unidadeGerenciadora`.\n\nOs 3 IDs vêm naturalmente do retorno de `compras_arp_listar` ou\n`compras_arp_itens_listar` (campos: `numeroControlePncpAta`,\n`numeroAta`, `unidadeGerenciadora`, `numeroItem`). Cache 10 min.\n\nQuando `numero_controle_pncp_ata` vem no formato de **compra** (sem\nsufixo `-NNNNNN`), devolvemos diagnóstico explícito antes de bater\nno upstream — caminho que retornava `cabecalho: null` silencioso.",
       "parameters": {
         "properties": {
@@ -2426,6 +2803,12 @@
       }
     },
     "compras_obter_prompt": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Renderiza um MCP Prompt e devolve o texto pronto.\n\nO texto retornado é o conteúdo da `PromptMessage[0]` — tipicamente um\nroteiro que orienta o LLM a executar um fluxo usando as tools deste\nservidor. Depois de obter o texto, o LLM normalmente segue as\ninstruções dele, chamando outras tools conforme indicado.\n\nRetorno:\n    {\n      \"nome\": str,\n      \"texto\": str,  # conteúdo renderizado pronto para usar\n      \"argumentos_usados\": dict,\n    }\n\nSe o prompt não existir ou faltar argumento obrigatório, retorna\n`_erro` com diagnóstico em vez de propagar exception.",
       "parameters": {
         "properties": {
@@ -2455,6 +2838,12 @@
       }
     },
     "compras_obter_resource": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lê o conteúdo de um MCP Resource pela URI.\n\nRetorna o conteúdo bruto (texto/JSON-string conforme o mime-type\nregistrado) e os metadados do resource.\n\nRetorno:\n    {\n      \"uri\": str,\n      \"nome\": str,\n      \"mime_type\": str,\n      \"conteudo\": str,\n    }\n\nSe a URI não existir, retorna `_erro` em vez de propagar exception.",
       "parameters": {
         "properties": {
@@ -2471,6 +2860,12 @@
       }
     },
     "compras_orgao_consultar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta um órgão específico pelo código.\n\nDevolve nome, sigla, CNPJ, esfera, poder e quantitativos.\nCache 24h.",
       "parameters": {
         "properties": {
@@ -2486,7 +2881,13 @@
       }
     },
     "compras_orgao_listar": {
-      "description": "Lista órgãos cadastrados no Compras.gov.br.\n\nEndpoint Dados Abertos `/modulo-uasg/2_consultarOrgao`. Inclui órgãos\ndo SISG (Sistema de Serviços Gerais), com código numérico, nome,\nesfera, poder e CNPJ.\n\nCache 24h.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Lista órgãos cadastrados no Compras.gov.br.\n\nEndpoint Dados Abertos `/modulo-uasg/2_consultarOrgao`. Inclui órgãos\ndo SISG (Sistema de Serviços Gerais), com código numérico, nome,\nesfera, poder e CNPJ.\n\n**✅ Restaurada em 2026-08-05**: faltava o parâmetro obrigatório\n`statusOrgao` — mesma causa do 404 em `compras_uasg_listar`.\n\n**⚠️ Filtros textuais não funcionam**: `nome`, `esfera` e `poder` não\nconstam do contrato desta rota e são ignorados pelo upstream (a\nresposta vem igual, com todos os ~11,8 mil órgãos ativos). Para\nlocalizar um órgão específico use `codigo_orgao` em\n`compras_orgao_consultar`. Verificado em 2026-08-05.\n\nCache 24h.",
       "parameters": {
         "properties": {
           "esfera": {
@@ -2540,6 +2941,12 @@
       }
     },
     "compras_perfil_fornecedor_completo": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Perfil consolidado do fornecedor (cadastro + Receita + sanções + impedimentos).\n\nComposição em paralelo:\n- **cadastro**: Dados Abertos `/modulo-fornecedor/1_consultarFornecedor`\n  pelo CNPJ (razão social, CNAE, porte, natureza jurídica);\n- **receita_federal**: BrasilAPI / MinhaReceita — QSA, capital social,\n  atividades secundárias, data de início, situação cadastral (RF).\n  Provider configurável via `CNPJ_PROVIDER` (default `brasilapi`);\n- **sanções**: Portal da Transparência (CEIS+CNEP+CEPIM) pelo CNPJ;\n- **impedimentos Comprasnet**: `/api/comprasnet/compras/impedimentos`.\n\n**Não inclui lista de contratos** porque os endpoints upstream\n`/modulo-contratos/1` (Dados Abertos) e `/v1/contratos` (PNCP) exigem\n`codigoOrgao` como filtro obrigatório — não é possível listar contratos\nde um fornecedor sem saber em qual órgão ele tem contrato. Se você já\nsouber o órgão, use `compras_contratos_listar(codigo_orgao=X, ni_fornecedor=Y, ...)`.\n\nSanções dependem de `TRANSPARENCIA_API_KEY` — se não configurada ou se\no WAF da CGU bloquear, o bloco retorna aviso e o restante segue.\n\nCache 10 min.",
       "parameters": {
         "properties": {
@@ -2557,7 +2964,13 @@
       }
     },
     "compras_pesquisar_preco_material": {
-      "description": "Pesquisa preços praticados em compras de material (CATMAT) pelo governo.\n\nEndpoint Dados Abertos: `/modulo-pesquisa-preco/1_consultarMaterial`.\nPara visão consolidada estatística (média/mediana no padrão IN 65/2021),\nuse a tool composta `compras_pesquisar_precos_para_etp`.\n\nCada item da resposta agrega uma compra distinta (uma UASG, uma data).\nPara obter o unitário ÚNICO de uma compra específica, use\n`compras_detalhar_preco_material`.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Pesquisa preços praticados em compras de material (CATMAT) pelo governo.\n\nEndpoint Dados Abertos: `/modulo-pesquisa-preco/1_consultarMaterial`.\nPara visão consolidada estatística (média/mediana no padrão IN 65/2021),\nuse a tool composta `compras_pesquisar_precos_para_etp`.\n\nCada item da resposta traz `precoUnitario`, `quantidade`, `dataCompra`,\n`niFornecedor`/`nomeFornecedor` e a UASG compradora — é **esta** a tool\nque devolve valor unitário para material. A `compras_detalhar_preco_material`\nNÃO devolve preço (ver a docstring dela).\n\n**⚠️ Quebra upstream corrigida em 2026-08-05**: entre ~2026-07 e\n2026-08-05 esta tool respondia \"Recurso nao encontrado\" (HTTP 404). A\nSEGES trocou a assinatura de query da rota sem versionar: o parâmetro\n`codigoItemCatalogo` foi substituído pelo par `tipo` (enum\n`codigoItemCatalogo` | `codigoPdm`) + `codigo`. Como a API responde\n**404** — e não 400 — a parâmetros obrigatórios ausentes, a quebra se\ndisfarçou de \"rota removida\". A rota nunca saiu do swagger oficial.\nCorrigido na v0.3.13; a assinatura de `compras_pesquisar_preco_servico`\n(rota 3) não mudou.\n\nSe voltar a devolver 404, a tool não levanta exception: devolve\n`_erro_upstream` com diagnóstico e alternativas.\n\nCache 10 min.",
       "parameters": {
         "properties": {
           "codigo_item_catalogo": {
@@ -2644,6 +3057,12 @@
       }
     },
     "compras_pesquisar_preco_servico": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Pesquisa preços praticados em compras de serviço (CATSER).\n\nEndpoint: `/modulo-pesquisa-preco/3_consultarServico`. Para visão\nconsolidada (mediana, média, desvio no padrão IN 65/2021), use a tool\ncomposta `compras_pesquisar_precos_para_etp` com tipo='servico'.",
       "parameters": {
         "properties": {
@@ -2731,6 +3150,12 @@
       }
     },
     "compras_pesquisar_precos_para_etp": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Agrega preços praticados aplicando metodologia IN SEGES/ME 65/2021.\n\nComposição: percorre `compras_pesquisar_preco_material` ou `_servico`\nem até `max_paginas`, agrega os valores unitários e calcula:\nmediana, média, desvio padrão, mínimo, máximo, quartis (Q1, Q3) e\ndescarte de outliers por IQR (1.5×IQR — Tukey).\n\nSaída pronta para colagem em ETP: lista detalhada + sumário estatístico\n+ amostra recomendada (sem outliers). Cache 10 min.",
       "parameters": {
         "properties": {
@@ -2777,6 +3202,12 @@
       }
     },
     "compras_pgc_agregacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Resumo agregado do PGC de um órgão num ano (totais por categoria).\n\nEndpoint Dados Abertos `/modulo-pgc/3_consultarPgcAgregacao`. Retorna\ncontagens e valores totais por categoria/grupo, útil para diagnóstico\nrápido do volume planejado pelo órgão.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -2807,6 +3238,12 @@
       }
     },
     "compras_pgc_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de PGC (Plano de Gestão de Contratações) do governo federal.\n\nEndpoint Dados Abertos `/modulo-pgc/1_consultarPgcDetalhe`. Cada linha\nrepresenta um item planejado: descrição, quantidade, valor unitário\nestimado, mês previsto de início e categoria de item.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -2856,6 +3293,12 @@
       }
     },
     "compras_pgc_listar_csv": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Versão CSV de `compras_pgc_listar` (mesmo dataset, formato planilha).\n\nEndpoint `/modulo-pgc/1.1_consultarPgcDetalhe_CSV`. Útil para colar no\nETP ou planilhar localmente. Retorna o CSV no campo `csv` da resposta.",
       "parameters": {
         "properties": {
@@ -2895,6 +3338,12 @@
       }
     },
     "compras_pgc_por_catalogo": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista todos os PGCs que incluem determinado item de catálogo (CATMAT/CATSER).\n\nEndpoint Dados Abertos `/modulo-pgc/2_consultarPgcDetalheCatalogo`.\nÚtil para responder: \"Quais órgãos planejaram comprar esse item este ano?\nEm que quantidade?\". Insumo para ETP e benchmarking de quantitativos.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -2934,6 +3383,12 @@
       }
     },
     "compras_pncp_atas_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista atas registradas no PNCP no período (federal + estadual + municipal).\n\nEndpoint PNCP `/v1/atas`. Permite encontrar atas de qualquer ente da\nfederação — mais amplo que Dados Abertos (só federal SISG).\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -2978,6 +3433,12 @@
       }
     },
     "compras_pncp_contratacao_item_resultados": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista resultados (vencedores) de um item específico de contratação no PNCP.\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{n}/resultados`.\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -3010,6 +3471,12 @@
       }
     },
     "compras_pncp_contratacao_itens": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de uma contratação no PNCP.\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens`.\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -3047,6 +3514,12 @@
       }
     },
     "compras_pncp_contratacao_por_orgao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta uma contratação específica pelo CNPJ + ano + sequencial.\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}`. Devolve\ncabeçalho completo da contratação.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -3074,6 +3547,12 @@
       }
     },
     "compras_pncp_contratacoes_atualizacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratações alteradas no período (PNCP).\n\nEndpoint `/v1/contratacoes/atualizacao`. Útil para monitoramento:\ndescobrir editais que sofreram retificações/republicações. Aceita\nfiltro `esfera` client-side.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -3123,6 +3602,12 @@
       }
     },
     "compras_pncp_contratacoes_proposta": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratações com prazo de proposta aberto no PNCP.\n\nEndpoint `/v1/contratacoes/proposta`. Útil para mapear oportunidades\nabertas para fornecedores ou para identificar contratações em curso\nem órgãos similares. Filtro `esfera` opcional client-side.\n\nCache 15 min.",
       "parameters": {
         "properties": {
@@ -3178,6 +3663,12 @@
       }
     },
     "compras_pncp_contratacoes_publicacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratações publicadas no PNCP no período.\n\nEndpoint `/v1/contratacoes/publicacao`. Cobre todos os entes da\nfederação. Modalidades comuns: 6=Pregão Eletrônico, 8=Dispensa,\n9=Inexigibilidade, 4=Concorrência Eletrônica.\n\nO filtro `esfera` (federal/estadual/municipal/distrital) é aplicado\nclient-side sobre a página retornada. Janela máxima por consulta: ~30\ndias. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -3263,6 +3754,12 @@
       }
     },
     "compras_pncp_contrato_por_orgao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta um contrato específico no PNCP.\n\nEndpoint `/v1/orgaos/{cnpj}/contratos/{ano}/{sequencial}`. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -3290,6 +3787,12 @@
       }
     },
     "compras_pncp_contratos_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista contratos publicados no PNCP no período.\n\nEndpoint `/v1/contratos`. Cache 15 min.",
       "parameters": {
         "properties": {
@@ -3334,6 +3837,12 @@
       }
     },
     "compras_pncp_modalidades": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Cheat sheet local: códigos de modalidade de contratação do PNCP.\n\nTool local (não chama upstream). Fonte: tabela oficial PNCP (Lei 14.133).\n\n**ATENÇÃO — duas tabelas em circulação no ecossistema Compras**:\n- `codigo` aqui (PNCP) é o usado em TODAS as tools `compras_pncp_*` e\n  em `modalidadeIdPncp` no payload de retorno.\n- O Dados Abertos / SIASG usa uma enumeração diferente em\n  `compras_contratacoes_14133_listar(codigo_modalidade_dados_abertos)`:\n  campo `equivalente_dados_abertos` abaixo, ou None se a modalidade\n  não estiver disponível naquele endpoint.",
       "parameters": {
         "properties": {},
@@ -3341,6 +3850,12 @@
       }
     },
     "compras_pncp_orgao_unidades": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista unidades administrativas de um órgão no PNCP.\n\nEndpoint PNCP `/v1/orgaos/{cnpj}/unidades`. Útil para descobrir códigos\nde unidade antes de filtrar contratações/contratos do órgão.\n\nCobre estados e municípios (não só federal). Cache 24h.\n\n**Tratamento de 404**: nem todo CNPJ está indexado no PNCP. Em vez de\nlevantar exception, esta tool retorna `_erro_upstream` informativo\ncom lista de alternativas (mesmo padrão das tools `compras_uasg_*` /\n`compras_orgao_*` quando o `/modulo-uasg/*` retorna 404).",
       "parameters": {
         "properties": {
@@ -3358,6 +3873,12 @@
       }
     },
     "compras_pncp_pca_atualizacao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista PCAs atualizados num período (PNCP).\n\nEndpoint PNCP `/v1/pca/atualizacao`. Útil para monitoramento: descobrir\nquais órgãos revisaram seu PCA recentemente.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3390,6 +3911,12 @@
       }
     },
     "compras_pncp_pca_listar": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista PCAs (Planos Anuais de Contratações) no PNCP.\n\nEndpoint PNCP `/v1/pca/`. Diferente do PGC, o PCA da Lei 14.133 cobre\nfederais + estaduais + municipais. Filtra por categoria do item\n(`codigo_classificacao_superior` é obrigatório no upstream).\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3432,6 +3959,12 @@
       }
     },
     "compras_pncp_pca_por_classificacao_superior": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista itens de PCA filtrados por categoria superior do item.\n\nEndpoint PNCP `/v1/pca/` com `codigoClassificacaoSuperior`. Permite\nagregar planejamentos por categoria (ex.: todos os itens de TI\nplanejados para o ano).\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3462,6 +3995,12 @@
       }
     },
     "compras_pncp_pca_por_usuario": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista PCAs vinculados a um usuário/sistema integrador específico.\n\nEndpoint PNCP `/v1/pca/usuario`. Uso menos comum — geralmente o\nanalista prefere `compras_pncp_pca_listar` com `cnpj_orgao`.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3492,6 +4031,12 @@
       }
     },
     "compras_sancao_acordos_leniencia": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Lista acordos de leniência firmados com a CGU.\n\nEndpoint `/api-de-dados/acordos-leniencia`. Empresas com acordo ativo\nestão sob compromisso de compliance reforçado — informação útil para\nanálise de risco em contratações de alto valor.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3517,6 +4062,12 @@
       }
     },
     "compras_sancao_ceaf": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta CEAF — Cadastro de Expulsões da Administração Federal.\n\nEndpoint `/api-de-dados/ceaf`. Servidores expulsos do serviço público\nfederal. Útil quando se identifica responsável/preposto suspeito.\n\nCPFs mascarados por LGPD (`123.***.***-45`). Cache 1h.",
       "parameters": {
         "properties": {
@@ -3554,6 +4105,12 @@
       }
     },
     "compras_sancao_ceis": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta CEIS — Cadastro de Empresas Inidôneas e Suspensas.\n\nEndpoint `/api-de-dados/ceis`. Empresas com sanção ativa não podem\ncontratar com a administração pública. Use **sempre** antes de\nhomologar pregões e contratos.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3603,6 +4160,12 @@
       }
     },
     "compras_sancao_cepim": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta CEPIM — Entidades Privadas Sem Fins Lucrativos Impedidas.\n\nEndpoint `/api-de-dados/cepim`. Aplicável a contratações via convênios\ne termos de fomento com OSCs.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3640,6 +4203,12 @@
       }
     },
     "compras_sancao_cnep": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Consulta CNEP — Cadastro Nacional de Empresas Punidas (Lei Anticorrupção).\n\nEndpoint `/api-de-dados/cnep`. Empresas punidas pela Lei 12.846/2013\n(Lei Anticorrupção). Indicador de risco de integridade.\n\nCache 1h.",
       "parameters": {
         "properties": {
@@ -3677,7 +4246,13 @@
       }
     },
     "compras_uasg_buscar": {
-      "description": "Busca UASGs por trecho do nome (match parcial).\n\nAtalho para `compras_uasg_listar` com filtro textual. Útil quando o\nanalista sabe o nome do órgão mas não o código UASG.\n\nCache 24h.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Busca UASGs por trecho do nome (match parcial, ignora acento e caixa).\n\n**✅ Restaurada em 2026-08-05, com busca local.** Duas correções:\n\n1. A rota exige `statusUasg`; sem ele devolvia 404 (mesma causa de\n   `compras_uasg_listar`).\n2. O parâmetro `nome` **não existe** no contrato da rota e era\n   ignorado pelo upstream — enviá-lo devolvia o universo inteiro\n   (~22 mil UASGs) como se fossem resultados de busca. Corrigir só o\n   item 1 teria trocado um erro visível (404) por um erro silencioso,\n   que é pior: o analista receberia \"TCU - SECRETARIA DE INFORMATICA\"\n   como 1º resultado de qualquer termo.\n\nComo não há filtro textual upstream, a busca é feita **localmente**:\na tool varre as páginas da rota (500 registros cada, ~8s no universo\ncompleto), filtra por `termo` e pagina o resultado filtrado. O varrido\nfica em cache por 24h, então só a primeira busca do dia paga o custo.\n\nO payload informa `_busca_local`, `_paginas_varridas` e\n`_universo_varrido` — se a varredura for truncada, isso fica explícito\nem vez de virar silêncio.\n\nCache 24h.",
       "parameters": {
         "properties": {
           "pagina": {
@@ -3691,7 +4266,7 @@
             "type": "integer"
           },
           "termo": {
-            "description": "Termo de busca textual no nome da UASG. Ex.: 'ANTAQ', 'aquaviarios', 'tribunal regional'.",
+            "description": "Trecho do nome da UASG (match literal, ignora acento e caixa). Ex.: 'aquaviarios', 'tribunal regional', 'exercito'. Siglas raramente funcionam — os nomes vêm por extenso no cadastro ('AGÊNCIA NACIONAL DE TRANSPORTES AQUAVIÁRIOS', não 'ANTAQ').",
             "maxLength": 100,
             "minLength": 2,
             "type": "string"
@@ -3704,7 +4279,13 @@
       }
     },
     "compras_uasg_consultar": {
-      "description": "Consulta uma UASG específica pelo código.\n\nDevolve nome, sigla, CNPJ vinculado, órgão superior e endereço.\nÚtil para resolver `codigo_uasg` antes de consultas filtradas.\n\nCache 24h.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Consulta uma UASG específica pelo código.\n\nDevolve nome, sigla, CNPJ vinculado, órgão superior e endereço.\nÚtil para resolver `codigo_uasg` antes de consultas filtradas.\n\n**✅ Restaurada em 2026-08-05** — ver `compras_uasg_listar` para o\ndiagnóstico do 404 que afetava toda a família `/modulo-uasg/*`.\n\nBusca primeiro entre as ativas; se não achar, repete entre as inativas\n(o upstream exige `statusUasg` e não aceita \"ambas\"), devolvendo\n`ativa: false` para UASGs extintas.\n\nCache 24h.",
       "parameters": {
         "properties": {
           "codigo_uasg": {
@@ -3719,7 +4300,13 @@
       }
     },
     "compras_uasg_listar": {
-      "description": "Lista UASGs (Unidades Administrativas de Serviços Gerais) do governo.\n\n**⚠️ Endpoint upstream indisponível (confirmado 2026-05)**: o path\n`/modulo-uasg/1_consultarUasg` retorna HTTP 404 apesar de listado no\nswagger oficial. Esta tool detecta o 404 e retorna `_erro_upstream`\neducativo + alternativas — não levanta exception.\n\nPara resolver UASG/órgão hoje, use as alternativas:\n- `compras_contrato_comprasnet_por_uasg(codigo_uasg=...)`: lista\n  contratos de uma UASG (útil para validar que ela existe);\n- GET https://contratos.comprasnet.gov.br/api/contrato/unidades:\n  lista todos os códigos UG federais (sem nomes).\n\nCache 24h.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Lista UASGs (Unidades Administrativas de Serviços Gerais) do governo.\n\n**✅ Restaurada em 2026-08-05.** Da v0.2.x até a v0.3.12 esta tool\ndevolvia \"endpoint indisponível\" e a documentação atribuía o 404 a um\nbug de roteamento da SEGES. O diagnóstico estava errado: faltava o\nparâmetro obrigatório `statusUasg`, e esta API responde **404** (não\n400) quando um obrigatório não vem. Enviando o parâmetro, a rota\ndevolve 200 com ~22 mil UASGs ativas.\n\nO filtro `ativo` alimenta `statusUasg`; quando não informado, a tool\nassume `True` (ativas), que é o caso de uso dominante.\n\n**Paginação**: o upstream ignora `tamanho_pagina` nesta rota e devolve\npáginas fixas de 500 registros — `_total_paginas` reflete a paginação\nreal do servidor, não o tamanho pedido.\n\nCache 24h.",
       "parameters": {
         "properties": {
           "ativo": {
@@ -3761,6 +4348,12 @@
       }
     },
     "compras_versao": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
       "description": "Healthcheck/diagnóstico do MCP. Retorna versão, fontes upstream e\nestado de configurações sensíveis (sem expor valores).\n\nÚtil para confirmar que o servidor está respondendo, qual a versão\ninstalada, quais APIs estão acessíveis e se a chave da Transparência\nfoi configurada (necessária para tools de sanções).",
       "parameters": {
         "properties": {},

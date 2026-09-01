@@ -28,7 +28,7 @@ from pydantic import Field
 from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.base import format_date
 from compras_mcp.config import get_settings
-from compras_mcp.mcp_instance import mcp
+from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
 from compras_mcp.schemas import (
     ListarPaginadoInput,
     ListarPGCInput,
@@ -56,7 +56,7 @@ def _ck(*parts: Any) -> str:
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pgc_listar(
     ano: Annotated[int, Field(description=desc(ListarPGCInput, "ano"))],
     codigo_orgao: Annotated[
@@ -104,7 +104,7 @@ async def compras_pgc_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pgc_por_catalogo(
     ano: Annotated[int, Field(description="Ano do PCA/PGC.")],
     tipo: Annotated[
@@ -154,7 +154,7 @@ async def compras_pgc_por_catalogo(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pgc_agregacao(
     ano: Annotated[int, Field(description="Ano do PGC.")],
     codigo_orgao: Annotated[
@@ -199,7 +199,7 @@ async def compras_pgc_agregacao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pgc_listar_csv(
     ano: Annotated[int, Field(description=desc(ListarPGCInput, "ano"))],
     codigo_orgao: Annotated[
@@ -241,7 +241,7 @@ async def compras_pgc_listar_csv(
 # ============================================================================
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_pca_listar(
     ano: Annotated[int, Field(description=desc(PNCPListarPCAInput, "ano"))],
     codigo_classificacao_superior: Annotated[
@@ -306,7 +306,7 @@ async def compras_pncp_pca_listar(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_pca_atualizacao(
     data_inicial: Annotated[
         date,
@@ -349,7 +349,7 @@ async def compras_pncp_pca_atualizacao(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_pca_por_usuario(
     ano: Annotated[int, Field(description="Ano do PCA.")],
     id_usuario: Annotated[
@@ -394,7 +394,7 @@ async def compras_pncp_pca_por_usuario(
     return with_latency(payload, started)
 
 
-@mcp.tool
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_pncp_pca_por_classificacao_superior(
     ano: Annotated[int, Field(description="Ano do PCA.")],
     codigo_classificacao_superior: Annotated[
