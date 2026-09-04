@@ -23,6 +23,7 @@ class Settings:
     # APIs upstream
     dados_abertos_base_url: str
     pncp_base_url: str
+    pncp_api_base_url: str
     transparencia_base_url: str
     transparencia_api_key: str
     comprasnet_contratos_base_url: str
@@ -58,6 +59,10 @@ class Settings:
             pncp_base_url=os.environ.get(
                 "PNCP_BASE_URL",
                 "https://pncp.gov.br/api/consulta",
+            ).rstrip("/"),
+            pncp_api_base_url=os.environ.get(
+                "PNCP_API_BASE_URL",
+                "https://pncp.gov.br/api/pncp",
             ).rstrip("/"),
             transparencia_base_url=os.environ.get(
                 "TRANSPARENCIA_BASE_URL",
