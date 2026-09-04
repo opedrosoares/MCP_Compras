@@ -54,6 +54,19 @@ def make_pncp(settings: Settings) -> PNCPClient:
     )
 
 
+def make_pncp_api(settings: Settings) -> PNCPClient:
+    """Cliente para a API interna do PNCP (`/api/pncp`) — anexos.
+
+    A rota de arquivos (TR, Edital, atas) é pública e não exige chave,
+    mas só existe nesse host base, não em `/api/consulta`.
+    """
+    return PNCPClient(
+        base_url=settings.pncp_api_base_url,
+        timeout=settings.http_timeout,
+        max_retries=settings.http_max_retries,
+    )
+
+
 def make_transparencia(settings: Settings, *, api_key: str | None = None) -> TransparenciaClient:
     return TransparenciaClient(
         base_url=settings.transparencia_base_url,

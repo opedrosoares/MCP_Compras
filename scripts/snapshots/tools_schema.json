@@ -3382,6 +3382,45 @@
         "type": "object"
       }
     },
+    "compras_pncp_ata_arquivos": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Lista os ARQUIVOS de uma Ata de Registro de Preços no PNCP (ata + aditivos).\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{anoCompra}/{sequencialCompra}/atas/{sequencialAta}/arquivos`\nda API pública de arquivos do PNCP (`/api/pncp`, sem chave).\n\nAditivos de reequilíbrio/prorrogação aparecem como documentos adicionais\ndo tipo `Ata de Registro de Preços` — diferencie por `titulo` e\n`dataPublicacaoPncp`. Download: GET simples na `url` de cada item.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "ano_compra": {
+            "description": "Ano da COMPRA que originou a ata.",
+            "type": "integer"
+          },
+          "cnpj": {
+            "description": "CNPJ do órgão (14 dígitos, com ou sem pontuação).",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          },
+          "sequencial_ata": {
+            "description": "Sequencial da ATA dentro da compra (1-based). É o sufixo numérico de `numeroControlePncpAta` (ex.: `...-000004/2024` → 4).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "sequencial_compra": {
+            "description": "Sequencial da compra, SEM zeros à esquerda.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cnpj",
+          "ano_compra",
+          "sequencial_compra",
+          "sequencial_ata"
+        ],
+        "type": "object"
+      }
+    },
     "compras_pncp_atas_listar": {
       "annotations": {
         "destructiveHint": false,
@@ -3428,6 +3467,39 @@
         "required": [
           "data_inicial",
           "data_final"
+        ],
+        "type": "object"
+      }
+    },
+    "compras_pncp_contratacao_arquivos": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      },
+      "description": "Lista os ARQUIVOS anexos de uma contratação no PNCP (Edital, TR, ETP...).\n\nEndpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/arquivos` da API\npública de arquivos do PNCP (host `/api/pncp`, sem chave — diferente de\n`/api/consulta`, que exige `chave-api-dadosabertos` e não expõe anexos).\n\nCada item traz `url` (download direto do PDF/ZIP), `sequencialDocumento`,\n`titulo`, `tipoDocumentoNome` (Edital, Termo de Referência, Projeto\nBásico, Estudo Técnico Preliminar...). Atenção: o arquivo do Edital vem\nfrequentemente como ZIP (por vezes ZIP dentro de ZIP) contendo o TR.\nBaixe com GET simples na `url` — não é necessário navegador.\n\nCache 15 min.",
+      "parameters": {
+        "properties": {
+          "ano": {
+            "description": "Ano da contratação (4 dígitos).",
+            "type": "integer"
+          },
+          "cnpj": {
+            "description": "CNPJ do órgão (14 dígitos, com ou sem pontuação).",
+            "maxLength": 20,
+            "minLength": 11,
+            "type": "string"
+          },
+          "sequencial": {
+            "description": "Sequencial da contratação, SEM zeros à esquerda (ex.: 2101, não 002101).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cnpj",
+          "ano",
+          "sequencial"
         ],
         "type": "object"
       }
