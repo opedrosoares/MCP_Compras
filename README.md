@@ -7,7 +7,7 @@
 
 Servidor MCP que reúne em um único pacote as APIs públicas do ecossistema **Compras.gov.br**, voltado a analistas e técnicos das áreas de **planejamento de contratação** e **execução contratual**.
 
-**94 tools + 6 prompts + 6 resources** cobrindo Dados Abertos, PNCP, Portal da Transparência/CGU, Comprasnet Contratos e BrasilAPI/Receita.
+**96 tools + 6 prompts + 6 resources** cobrindo Dados Abertos, PNCP, Portal da Transparência/CGU, Comprasnet Contratos e BrasilAPI/Receita.
 
 Apoia a elaboração de:
 
@@ -293,7 +293,7 @@ railway up
 
 Nenhuma dependência de sistema além do Python — diferente de MCPs que fazem OCR/scraping, este servidor só consome APIs REST públicas.
 
-## Tools (94 no total)
+## Tools (96 no total)
 
 Agrupadas por domínio funcional:
 
@@ -395,7 +395,7 @@ MIT — veja [LICENSE](LICENSE).
 
 ## Status
 
-v0.3.15 — 94 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
+v0.3.15 — 96 tools (fork local: +2 tools de arquivos PNCP) + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
 
 <!-- Prova de propriedade do MCP Registry oficial: o validador procura este
      token na long_description publicada no PyPI. Não remover. -->

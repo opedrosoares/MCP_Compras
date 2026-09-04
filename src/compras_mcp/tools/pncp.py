@@ -48,6 +48,7 @@ from compras_mcp.tools._helpers import (
     desc,
     envelope_pncp,
     make_pncp,
+    make_pncp_api,
     with_latency,
 )
 
@@ -690,4 +691,164 @@ async def compras_pncp_modalidades() -> dict[str, Any]:
         ),
         "_cache_hit": False,
     }
+    return with_latency(payload, started)
+
+
+@mcp.tool(annotations=SOMENTE_LEITURA)
+async def compras_pncp_contratacao_arquivos(
+    cnpj: Annotated[
+        str,
+        Field(
+            description="CNPJ do órgão (14 dígitos, com ou sem pontuação).",
+            min_length=11,
+            max_length=20,
+        ),
+    ],
+    ano: Annotated[int, Field(description="Ano da contratação (4 dígitos).")],
+    sequencial: Annotated[
+        int,
+        Field(description="Sequencial da contratação, SEM zeros à esquerda (ex.: 2101, não 002101)."),
+    ],
+) -> dict[str, Any]:
+    """Lista os ARQUIVOS anexos de uma contratação no PNCP (Edital, TR, ETP...).
+
+    Endpoint `/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/arquivos` da API
+    pública de arquivos do PNCP (host `/api/pncp`, sem chave — diferente de
+    `/api/consulta`, que exige `chave-api-dadosabertos` e não expõe anexos).
+
+    Cada item traz `url` (download direto do PDF/ZIP), `sequencialDocumento`,
+    `titulo`, `tipoDocumentoNome` (Edital, Termo de Referência, Projeto
+    Básico, Estudo Técnico Preliminar...). Atenção: o arquivo do Edital vem
+    frequentemente como ZIP (por vezes ZIP dentro de ZIP) contendo o TR.
+    Baixe com GET simples na `url` — não é necessário navegador.
+
+    Cache 15 min.
+    """
+    started = time.perf_counter()
+    cnpj_clean = _so_digitos(cnpj)
+    key = _ck("pncp_arq_contr", cnpj_clean, ano, sequencial)
+    cached = await _pncp_cache.get(key)
+    if cached is not None:
+        cached["_cache_hit"] = True
+        return with_latency(cached, started)
+
+    path = f"/v1/orgaos/{cnpj_clean}/compras/{ano}/{sequencial}/arquivos"
+    try:
+        async with make_pncp_api(get_settings()) as client:
+            resp = await client.get_resource(path)
+    except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
+        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        return with_latency(
+            _resposta_pncp_singular_404(
+                path,
+                {"cnpj": cnpj_clean, "ano": ano, "sequencial": sequencial},
+                status=status,
+            ),
+            started,
+        )
+
+    itens = resp if isinstance(resp, list) else [resp]
+    payload: dict[str, Any] = {
+        "encontrado": bool(itens),
+        "cnpj_consultado": cnpj_clean,
+        "ano_consultado": ano,
+        "sequencial_consultado": sequencial,
+        "resultado": itens,
+        "_total_registros": len(itens),
+        "_cache_hit": False,
+        "aviso_download": (
+            "Baixe cada item com GET na URL devolvida. O Edital pode vir como "
+            "ZIP (às vezes ZIP dentro de ZIP) com TR/ETP/DOD dentro; confira "
+            "com `file` antes de tratar como PDF."
+        ),
+    }
+    await _pncp_cache.set(key, json.loads(json.dumps(payload, default=str)))
+    return with_latency(payload, started)
+
+
+@mcp.tool(annotations=SOMENTE_LEITURA)
+async def compras_pncp_ata_arquivos(
+    cnpj: Annotated[
+        str,
+        Field(
+            description="CNPJ do órgão (14 dígitos, com ou sem pontuação).",
+            min_length=11,
+            max_length=20,
+        ),
+    ],
+    ano_compra: Annotated[int, Field(description="Ano da COMPRA que originou a ata.")],
+    sequencial_compra: Annotated[
+        int,
+        Field(description="Sequencial da compra, SEM zeros à esquerda."),
+    ],
+    sequencial_ata: Annotated[
+        int,
+        Field(
+            description=(
+                "Sequencial da ATA dentro da compra (1-based). É o sufixo numérico de "
+                "`numeroControlePncpAta` (ex.: `...-000004/2024` → 4)."
+            ),
+            ge=1,
+        ),
+    ],
+) -> dict[str, Any]:
+    """Lista os ARQUIVOS de uma Ata de Registro de Preços no PNCP (ata + aditivos).
+
+    Endpoint `/v1/orgaos/{cnpj}/compras/{anoCompra}/{sequencialCompra}/atas/{sequencialAta}/arquivos`
+    da API pública de arquivos do PNCP (`/api/pncp`, sem chave).
+
+    Aditivos de reequilíbrio/prorrogação aparecem como documentos adicionais
+    do tipo `Ata de Registro de Preços` — diferencie por `titulo` e
+    `dataPublicacaoPncp`. Download: GET simples na `url` de cada item.
+
+    Cache 15 min.
+    """
+    started = time.perf_counter()
+    cnpj_clean = _so_digitos(cnpj)
+    key = _ck("pncp_arq_ata", cnpj_clean, ano_compra, sequencial_compra, sequencial_ata)
+    cached = await _pncp_cache.get(key)
+    if cached is not None:
+        cached["_cache_hit"] = True
+        return with_latency(cached, started)
+
+    path = (
+        f"/v1/orgaos/{cnpj_clean}/compras/{ano_compra}/{sequencial_compra}"
+        f"/atas/{sequencial_ata}/arquivos"
+    )
+    try:
+        async with make_pncp_api(get_settings()) as client:
+            resp = await client.get_resource(path)
+    except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
+        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        return with_latency(
+            _resposta_pncp_singular_404(
+                path,
+                {
+                    "cnpj": cnpj_clean,
+                    "anoCompra": ano_compra,
+                    "sequencialCompra": sequencial_compra,
+                    "sequencialAta": sequencial_ata,
+                },
+                status=status,
+            ),
+            started,
+        )
+
+    itens = resp if isinstance(resp, list) else [resp]
+    payload: dict[str, Any] = {
+        "encontrado": bool(itens),
+        "cnpj_consultado": cnpj_clean,
+        "ano_compra_consultado": ano_compra,
+        "sequencial_compra_consultado": sequencial_compra,
+        "sequencial_ata_consultado": sequencial_ata,
+        "resultado": itens,
+        "_total_registros": len(itens),
+        "_cache_hit": False,
+        "aviso_download": (
+            "GET simples na URL de cada item baixa o PDF. Aditivos chegam como "
+            "documentos extras tipo 'Ata de Registro de Preços' — use titulo/"
+            "dataPublicacaoPncp para distinguir a ata original."
+        ),
+    }
+    await _pncp_cache.set(key, json.loads(json.dumps(payload, default=str)))
     return with_latency(payload, started)
