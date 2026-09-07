@@ -97,6 +97,39 @@ ausente → stdio. Mesma lógica do mcp-inpi.
 - Comprasnet Contratos: <https://gitlab.com/comprasnet/contratos> (routes/api.php)
 - ReadTheDocs Contratos: <https://comprasnet-contratos.readthedocs.io/pt-br/latest/>
 
+## Autoria dos commits
+
+Author **e** committer são sempre `Pedro Soares <pedrohsoares.adv@gmail.com>`.
+Nunca `Lab2Code <lab2code@lab2code.com>`: o projeto saiu da Lab2Code e passou para
+a autoria particular de opedrosoares.
+
+**Não anexar `Co-Authored-By: Claude`** — nem as variantes (`Claude Opus 5`,
+`Claude Sonnet 5`, `Claude Code`, `🤖 Generated with…`). `Co-Authored-By:` fica
+reservado a humanos que de fato contribuíram, como @LeonardoDiasRR na PR #1. Isso
+contraria o default de alguns agentes, que anexam o trailer sozinhos — a regra do
+projeto prevalece.
+
+O motivo é o grafo de Contributors do GitHub: cada trailer cria uma entrada
+`claude` na lista, e a autoria Lab2Code criava outra. A história do `main` foi
+reescrita em 07/09/2026 para remover as duas (`e83eb21` → `d9d500b`, com as 10
+árvores idênticas e o commit do @LeonardoDiasRR intocado).
+
+Como a regra escrita não segurou na prática, existe um hook determinístico. Ele
+mora em `.git/hooks/`, que **não é versionado** — em clone novo, reinstalar:
+
+```bash
+cp scripts/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+```
+
+Ele remove os trailers de IA da mensagem e recusa o commit se a identidade for
+Lab2Code.
+
+**Nunca rodar `git push --tags` nem `git push --all` neste repositório.** Os
+branches locais `backup/local-main-lab2code` e `pub-docs` e as tags `v0.2.8`…
+`v0.2.13` ainda apontam para a história antiga com Lab2Code e não existem no
+remoto; um push amplo ressuscitaria a atribuição no GitHub. Empurrar sempre refs
+nomeadas: `git push origin main`, `git push origin vX.Y.Z`.
+
 ## Build & deploy
 
 - `.mcpb`: `python build_mcpb.py` → `dist/compras.mcpb`. Atualizar a lista

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Bloqueia identidade Lab2Code e remove trailers de co-autoria de IA.
+# Instalado em .git/hooks/commit-msg (local, nao versionado).
+set -euo pipefail
+MSG_FILE="$1"
+
+for W in AUTHOR COMMITTER; do
+  IDENT=$(git var "GIT_${W}_IDENT")
+  case "${IDENT,,}" in
+    *lab2code*)
+      echo "commit-msg: identidade Lab2Code bloqueada ($W: $IDENT)." >&2
+      echo "            Corrija com: git config user.name 'Pedro Soares'" >&2
+      echo "                         git config user.email 'pedrohsoares.adv@gmail.com'" >&2
+      exit 1 ;;
+  esac
+done
+
+python3 - "$MSG_FILE" <<'PY'
+import re, sys
+p = sys.argv[1]
+with open(p, encoding="utf-8") as f:
+    src = f.read()
+drop = (
+    re.compile(r"^\s*co-authored-by:\s*(claude|anthropic)\b", re.I),
+    re.compile(r"^\s*(\U0001F916\s*)?generated with\s*\[?claude", re.I),
+)
+kept = [l for l in src.split("\n") if not any(d.match(l) for d in drop)]
+out = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).rstrip() + "\n"
+if out != src:
+    with open(p, "w", encoding="utf-8") as f:
+        f.write(out)
+PY
