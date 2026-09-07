@@ -118,13 +118,15 @@ TOOLS: tuple[str, ...] = (
     "compras_pncp_pca_atualizacao",
     "compras_pncp_pca_por_usuario",
     "compras_pncp_pca_por_classificacao_superior",
-    # pncp (9)
+    # pncp (11)
     "compras_pncp_contratacoes_publicacao",
     "compras_pncp_contratacoes_proposta",
     "compras_pncp_contratacoes_atualizacao",
     "compras_pncp_contratacao_por_orgao",
     "compras_pncp_contratacao_itens",
     "compras_pncp_contratacao_item_resultados",
+    "compras_pncp_contratacao_arquivos",
+    "compras_pncp_ata_arquivos",
     "compras_pncp_contratos_listar",
     "compras_pncp_contrato_por_orgao",
     "compras_pncp_modalidades",
@@ -176,4 +178,4 @@ async def test_registro_nao_tem_tool_fora_da_lista(registro: dict) -> None:
 
 
 async def test_lista_sem_duplicatas() -> None:
-    assert len(TOOLS) == len(set(TOOLS)) == 94
+    assert len(TOOLS) == len(set(TOOLS)) == 96

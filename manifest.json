@@ -3,7 +3,7 @@
   "name": "compras",
   "display_name": "Compras.gov.br",
   "version": "0.3.15",
-  "description": "94 tools + 6 prompts + 6 resources cobrindo APIs publicas do Compras.gov.br (Dados Abertos, PNCP, Portal da Transparencia/CGU, Comprasnet Contratos e BrasilAPI/Receita) para apoio a ETP, TR e demais documentos pela Lei 14.133/2021. Inclui tools-espelho (compras_listar_prompts, compras_obter_prompt, compras_listar_resources, compras_obter_resource) para clientes MCP que so consomem o primitivo tools (ex.: Claude.ai web).",
+  "description": "96 tools + 6 prompts + 6 resources cobrindo APIs publicas do Compras.gov.br (Dados Abertos, PNCP, Portal da Transparencia/CGU, Comprasnet Contratos e BrasilAPI/Receita) para apoio a ETP, TR e demais documentos pela Lei 14.133/2021. Inclui tools-espelho (compras_listar_prompts, compras_obter_prompt, compras_listar_resources, compras_obter_resource) para clientes MCP que so consomem o primitivo tools (ex.: Claude.ai web).",
   "long_description": "Servidor MCP voltado a analistas e tecnicos das areas de planejamento de contratacao e execucao contratual. Reune em tools unicas as principais APIs publicas do ecossistema Compras.gov.br: Dados Abertos (CATMAT/CATSER, pesquisa de precos, contratacoes 14.133, atas de registro de preco, contratos, fornecedores, PGC, indicadores), Portal Nacional de Contratacoes Publicas - PNCP (contratacoes federadas, propostas com prazo aberto, atas, agregacao temporal e comparacao de periodos), Portal da Transparencia/CGU (sancoes CEIS, CNEP, CEAF) e BrasilAPI/MinhaReceita (enriquecimento de CNPJ com QSA, capital, CNAEs). Inclui tools compostas de alto valor (pesquisa de precos para ETP no padrao IN SEGES/ME 65/2021, dossie de ata de registro de preco com adesoes, perfil consolidado de fornecedor com sancoes + Receita, checagem paralela de sancoes, busca federada de contratacoes similares), filtro de esfera federativa nas listagens PNCP, alem de prompts pre-definidos (roteiros para analise de edital, dossie de fornecedor, panorama de orgao, oportunidades de carona em ARP, montagem de pesquisa de precos e analise de tendencia) e resources de referencia (modalidades, esferas, criterios de julgamento, glossario da Lei 14.133).",
   "author": {
     "name": "Pedro Soares",
@@ -345,8 +345,16 @@
       "description": "Lista todos os PGCs que incluem determinado item de catálogo (CATMAT/CATSER)."
     },
     {
+      "name": "compras_pncp_ata_arquivos",
+      "description": "Lista os arquivos de uma Ata de Registro de Precos no PNCP (ata original + aditivos), com URL de download."
+    },
+    {
       "name": "compras_pncp_atas_listar",
       "description": "Lista atas registradas no PNCP no período (federal + estadual + municipal)."
+    },
+    {
+      "name": "compras_pncp_contratacao_arquivos",
+      "description": "Lista os arquivos anexos de uma contratacao no PNCP (Edital, TR, ETP) com URL de download direto."
     },
     {
       "name": "compras_pncp_contratacao_item_resultados",
