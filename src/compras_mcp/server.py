@@ -88,6 +88,7 @@ async def compras_versao() -> dict[str, Any]:
         fontes={
             "dados_abertos": settings.dados_abertos_base_url,
             "pncp": settings.pncp_base_url,
+            "pncp_arquivos": settings.pncp_api_base_url,
             "transparencia": settings.transparencia_base_url,
             "comprasnet_contratos": settings.comprasnet_contratos_base_url,
         },
@@ -156,6 +157,7 @@ async def compras_healthcheck(
         "fontes": {
             "dados_abertos": settings.dados_abertos_base_url,
             "pncp": settings.pncp_base_url,
+            "pncp_arquivos": settings.pncp_api_base_url,
             "transparencia": settings.transparencia_base_url,
             "comprasnet_contratos": settings.comprasnet_contratos_base_url,
         },

@@ -308,7 +308,7 @@ Agrupadas por domínio funcional:
 | **Contratos** | 14 | Dados Abertos + Comprasnet (garantias, faturas, ocorrências, fiscais, empenhos, cronograma, publicações) |
 | **Fornecedores** | 4 | Cadastro, impedimentos, contratos por item |
 | **Sanções** (Transparência/CGU) | 5 | CEIS, CNEP, CEPIM, CEAF, acordos de leniência |
-| **PNCP** | 9 | Contratações (publicação, proposta, atualização), contratos, modalidades |
+| **PNCP** | 11 | Contratações (publicação, proposta, atualização), contratos, modalidades, **arquivos de contratação e de ata** (Edital/TR/ETP e aditivos, com URL de download) |
 | **Organizações** | 6 | UASG (listar/consultar/buscar), órgãos, unidades PNCP |
 | **Indicadores** | 2 | Consolidados, por período |
 | **Analítica** | 2 | Série temporal de contratações, comparação entre períodos |
@@ -326,6 +326,19 @@ A lista completa (nome + descrição de cada tool) está em [`manifest.json`](ma
 2. `compras_pesquisar_precos_para_etp` (composta) com `tipo="material"` → mediana/média/desvio + descarte IQR
 3. `compras_pgc_por_catalogo` para ver o que outros órgãos planejaram comprar
 4. `compras_arp_listar` com `apenas_vigentes=True` → atas vigentes para possível adesão
+
+**Ler a especificação técnica real por trás de um item genérico:**
+
+1. `compras_pncp_contratacoes_publicacao` (ou `compras_arp_listar`) → obter `cnpj`, `ano` e `sequencial` da compra
+2. `compras_pncp_contratacao_arquivos` → lista Edital, Termo de Referência, ETP e Projeto Básico com URL de download
+3. Baixar a `url` com um GET simples — o Edital costuma vir como ZIP (às vezes ZIP dentro de ZIP) com o TR dentro
+
+É o caminho para descobrir, por exemplo, qual GPU está de fato por trás de um CATMAT genérico de "microcomputador".
+
+**Acompanhar aditivos de uma ata de registro de preços:**
+
+1. `compras_arp_listar` → obter `numeroControlePncpAta` e o sequencial da ata dentro da compra
+2. `compras_pncp_ata_arquivos` → ata original + aditivos de reequilíbrio/prorrogação, ordenáveis por `dataPublicacaoPncp`
 
 **Análise de fornecedor antes de homologação:**
 
@@ -395,7 +408,7 @@ MIT — veja [LICENSE](LICENSE).
 
 ## Status
 
-v0.3.15 — 96 tools (fork local: +2 tools de arquivos PNCP) + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
+v0.3.16 — 96 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
 
 <!-- Prova de propriedade do MCP Registry oficial: o validador procura este
      token na long_description publicada no PyPI. Não remover. -->

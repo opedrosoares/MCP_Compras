@@ -23,6 +23,7 @@ def _isolated_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "REDIS_URL",
         "DADOS_ABERTOS_BASE_URL",
         "PNCP_BASE_URL",
+        "PNCP_API_BASE_URL",
         "TRANSPARENCIA_BASE_URL",
         "COMPRASNET_CONTRATOS_BASE_URL",
         "COMPRASNET_BEARER_TOKEN",

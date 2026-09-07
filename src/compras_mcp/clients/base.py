@@ -197,7 +197,7 @@ class BaseAsyncClient:
                     f"Recurso nao encontrado em {self.api_name}{path}"
                 )
             if resp.status_code == 429:
-                if attempt < self.max_retries:
+                if attempt < retries:
                     retry_after = float(resp.headers.get("Retry-After", "2"))
                     self.log.warning(
                         "client.rate_limit",
@@ -211,7 +211,7 @@ class BaseAsyncClient:
                     f"Rate limit em {self.api_name}{path} (quota da API)"
                 )
             if 500 <= resp.status_code < 600:
-                if attempt < self.max_retries:
+                if attempt < retries:
                     self.log.warning(
                         "client.server_error",
                         path=path,
@@ -243,7 +243,13 @@ class BaseAsyncClient:
             )
             return data
 
-        # Inalcançável (raises acima já cobrem todos os caminhos)
+        # Inalcançável: todo caminho acima ou retorna ou levanta exceção
+        # classificada. Era alcançável até a v0.3.16, quando os ramos 429 e
+        # 5xx comparavam `attempt` com `self.max_retries` em vez do override
+        # `retries` da chamada: com `max_retries=0` (fast-fail dos endpoints
+        # singulares) o `continue` saía do loop e caía aqui, trocando um
+        # ComprasServerError/RateLimitError por um ComprasHTTPError genérico
+        # — e o diagnóstico da tool passava a culpar os parâmetros.
         raise ComprasHTTPError(f"Esgotou retries em {self.api_name}{path}")
 
 

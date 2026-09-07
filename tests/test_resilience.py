@@ -451,3 +451,53 @@ async def test_sancao_ceis_waf_block_retorna_erro_upstream_classificado(
     )
     assert erro.get("status") == 405
     assert "alternativas" in erro and len(erro["alternativas"]) >= 1
+
+
+# ----------------------------------------------------------------------------
+# Override de retry por chamada — 429/5xx precisam honrar `max_retries=0`
+# ----------------------------------------------------------------------------
+#
+# Os endpoints singulares chamam `get_json(..., max_retries=0)` para falhar
+# rápido. Até a v0.3.16 os ramos 429 e 5xx comparavam `attempt` com
+# `self.max_retries` (default 2) em vez do override, então o `continue`
+# escapava do `for` e caía no `raise ComprasHTTPError("Esgotou retries")`
+# final — marcado no código como "inalcançável". O efeito visível era a tool
+# perder a classificação do erro e culpar os parâmetros do analista por uma
+# indisponibilidade do upstream.
+
+
+@pytest.mark.asyncio
+async def test_5xx_com_retry_zero_preserva_classificacao(httpx_mock: HTTPXMock) -> None:
+    from compras_mcp.clients.pncp import PNCPClient
+    from compras_mcp.errors import ComprasServerError
+
+    httpx_mock.add_response(
+        url=re.compile(r"https://pncp\.example/v1/teste.*"),
+        status_code=503,
+        text="Service Unavailable",
+    )
+
+    async with PNCPClient(base_url="https://pncp.example", timeout=5, max_retries=2) as c:
+        with pytest.raises(ComprasServerError):
+            await c.get_json("/v1/teste", max_retries=0)
+
+    assert len(httpx_mock.get_requests()) == 1, "max_retries=0 não deve retentar"
+
+
+@pytest.mark.asyncio
+async def test_429_com_retry_zero_preserva_classificacao(httpx_mock: HTTPXMock) -> None:
+    from compras_mcp.clients.pncp import PNCPClient
+    from compras_mcp.errors import ComprasRateLimitError
+
+    httpx_mock.add_response(
+        url=re.compile(r"https://pncp\.example/v1/teste.*"),
+        status_code=429,
+        headers={"Retry-After": "1"},
+        text="rate limited",
+    )
+
+    async with PNCPClient(base_url="https://pncp.example", timeout=5, max_retries=2) as c:
+        with pytest.raises(ComprasRateLimitError):
+            await c.get_json("/v1/teste", max_retries=0)
+
+    assert len(httpx_mock.get_requests()) == 1

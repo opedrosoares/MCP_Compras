@@ -4,6 +4,70 @@ Todas as mudanças notáveis. Cada release foi descoberto em bateria E2E
 real contra o servidor em produção (Railway + Redis) e validado por
 probe direto ao upstream antes do fix.
 
+## [0.3.16] — 2026-09-07
+
+Primeira contribuição externa incorporada (PR #1, por
+[@LeonardoDiasRR](https://github.com/LeonardoDiasRR)). O servidor entregava
+metadado de contratação mas nenhum caminho para o documento em si: para ler o
+Termo de Referência — onde mora a especificação técnica real — o analista tinha
+que sair do MCP e adivinhar a rota de arquivos.
+
+### Added
+
+- **`compras_pncp_contratacao_arquivos(cnpj, ano, sequencial)`**: lista Edital,
+  Termo de Referência, ETP e Projeto Básico de uma contratação, com URL de
+  download direto. Rota `/v1/orgaos/{cnpj}/compras/{ano}/{seq}/arquivos`.
+- **`compras_pncp_ata_arquivos(cnpj, ano_compra, sequencial_compra, sequencial_ata)`**:
+  lista a ata original e os aditivos de uma ARP. Aditivos de reequilíbrio
+  chegam como documentos extras do **mesmo** `tipoDocumentoNome` da ata — a
+  tool não filtra por tipo justamente para não sumir com eles; distinga por
+  `titulo`/`dataPublicacaoPncp`.
+- **`PNCP_API_BASE_URL`** (opcional, default `https://pncp.gov.br/api/pncp`):
+  host da API de arquivos. É um host **distinto** de `/api/consulta` — aquele
+  exige `chave-api-dadosabertos` e não expõe anexo nenhum; este é aberto.
+  Exposto em `compras_versao`/`compras_healthcheck` como fonte `pncp_arquivos`.
+- **Rotas `pncp_compra_arquivos` e `pncp_ata_arquivos` no `upstream_registry`**:
+  a rota não consta do swagger publicado do PNCP e pode mudar sem aviso, que é
+  exatamente o cenário para o qual o probe existe. Ambas declaram `url` em
+  `campos_esperados` — sem esse campo a tool devolve 200 OK com metadado
+  inútil, a falha silenciosa que o registro foi criado para pegar.
+- **Testes de contrato da API de arquivos** (`tests/test_contrato_upstream.py`):
+  travam o host `/api/pncp`, o sequencial sem zeros à esquerda no path, a
+  normalização do array cru e o 404 gracioso. Uma troca de `make_pncp_api` por
+  `make_pncp` passaria despercebida por todo o resto da suíte.
+
+### Fixed
+
+- **Timeout e 5xx do PNCP não são mais reportados como erro de parâmetro.**
+  `ComprasTimeoutError` e `ComprasServerError` herdam de `ComprasHTTPError`,
+  então o mapeamento `404 if isinstance(e, ComprasNotFoundError) else 400`
+  varria os dois para "Requisição malformada — o upstream rejeitou os
+  parâmetros". Na prática isso mandava o analista revisar argumentos corretos
+  enquanto o PNCP estava apenas lento ou fora do ar. Agora `_status_do_erro`
+  classifica timeout como 504 e 5xx como 502, cada um com diagnóstico que
+  afirma explicitamente não se tratar de erro de parâmetro e sugere
+  `compras_healthcheck`. Observado ao vivo em 07/09/2026, com `/api/consulta`
+  devolvendo 503/timeout em todas as rotas simultaneamente.
+- **`BaseAsyncClient` honra o override `max_retries` por chamada em 429 e 5xx.**
+  Os dois ramos comparavam `attempt` com `self.max_retries` (default 2) em vez
+  do `retries` da chamada. Com `max_retries=0` — o fast-fail de *todo* endpoint
+  singular — o `continue` escapava do `for` e caía no
+  `raise ComprasHTTPError("Esgotou retries")` final, marcado no código como
+  "inalcançável". Efeito: um 503 ou 429 numa consulta singular perdia a
+  classificação, virava erro genérico e ainda dormia 0,5s à toa. Causa raiz do
+  item anterior; afeta todas as APIs, não só o PNCP.
+- `tests/conftest.py` não isolava `PNCP_API_BASE_URL`: um `.env` de dev com
+  essa variável vazaria para dentro da suíte e mandaria os testes para outro
+  host.
+- `manifest.json` voltou a terminar com newline.
+
+### Notas
+
+- 94 → **96 tools**. Continua tudo somente-leitura (GET); nenhuma escrita nova.
+- Documento baixado da `url` costuma vir como ZIP — por vezes ZIP dentro de
+  ZIP, com TR/ETP/DOD dentro. As tools devolvem a URL e o aviso; a extração
+  fica com o cliente.
+
 ## [0.3.15] — 2026-09-01
 
 Release de superfície de confiança, não de correção de bug. Origem: auditoria

@@ -708,6 +708,61 @@ _PNCP: list[RotaUpstream] = [
         timeout_s=_TIMEOUT_PNCP,
         observacao="Sub-rota não consta no contrato /api/consulta/v3/api-docs",
     ),
+    # --- API de arquivos (/api/pncp) --------------------------------------
+    # Host base distinto de /api/consulta e ausente do swagger publicado —
+    # é justamente o tipo de rota que quebra sem aviso, então entra no probe.
+    RotaUpstream(
+        id="pncp_compra_arquivos",
+        api="pncp_api",
+        modulo="pncp",
+        path="/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/arquivos",
+        tools=("compras_pncp_contratacao_arquivos",),
+        path_params=("cnpj", "ano", "sequencial"),
+        seed=(
+            "pncp_contratacoes_publicacao",
+            {
+                "cnpj": "orgaoEntidade.cnpj",
+                "ano": "anoCompra",
+                "sequencial": "sequencialCompra",
+            },
+        ),
+        # `url` é o contrato que importa: sem ela a tool devolve metadado
+        # sem serventia — 200 OK e nenhum jeito de baixar o Edital/TR.
+        campos_esperados=("url", "tipoDocumentoNome", "sequencialDocumento"),
+        aceita_vazio=True,
+        timeout_s=_TIMEOUT_PNCP,
+        observacao=(
+            "Rota do host /api/pncp (sem chave), não publicada em "
+            "/api/consulta/v3/api-docs. Documentos vêm como PDF ou ZIP."
+        ),
+    ),
+    RotaUpstream(
+        id="pncp_ata_arquivos",
+        api="pncp_api",
+        modulo="pncp",
+        path="/v1/orgaos/{cnpj}/compras/{anoCompra}/{sequencialCompra}/atas/{sequencialAta}/arquivos",
+        tools=("compras_pncp_ata_arquivos",),
+        path_params=("cnpj", "anoCompra", "sequencialCompra", "sequencialAta"),
+        # A listagem de atas não devolve o sequencial da ata dentro da compra;
+        # 1 é a primeira ata de qualquer compra que gerou ata, então serve de
+        # amostra estável sem fixar um ID volátil no código.
+        params={"sequencialAta": 1},
+        seed=(
+            "pncp_atas",
+            {
+                "cnpj": "cnpjOrgao",
+                "anoCompra": "anoCompra",
+                "sequencialCompra": "sequencialCompra",
+            },
+        ),
+        campos_esperados=("url", "tipoDocumentoNome", "dataPublicacaoPncp"),
+        aceita_vazio=True,
+        timeout_s=_TIMEOUT_PNCP,
+        observacao=(
+            "Mesmo host /api/pncp. Aditivos de reequilíbrio/prorrogação vêm "
+            "como documentos extras do mesmo tipo da ata original."
+        ),
+    ),
     RotaUpstream(
         id="pncp_orgao_unidades",
         api="pncp",

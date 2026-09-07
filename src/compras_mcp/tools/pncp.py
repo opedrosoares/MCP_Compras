@@ -14,6 +14,10 @@ Endpoints cobertos:
 - /v1/contratos                            (contratos publicados)
 - /v1/orgaos/{cnpj}/contratos/{ano}/{seq}  (contrato singular)
 
+Do host `/api/pncp` (API de arquivos, sem chave — não é `/api/consulta`):
+- /v1/orgaos/{cnpj}/compras/{ano}/{seq}/arquivos            (Edital, TR, ETP)
+- /v1/orgaos/{cnpj}/compras/{ano}/{seq}/atas/{n}/arquivos   (ata + aditivos)
+
 Cache TTL curto (15 min). Inclui também tool local `modalidades` (cheat-sheet).
 """
 
@@ -33,6 +37,7 @@ from compras_mcp.errors import (
     ComprasHTTPError,
     ComprasNotFoundError,
     ComprasServerError,
+    ComprasTimeoutError,
 )
 from compras_mcp.esfera import (
     ESFERA_VALORES,
@@ -72,6 +77,25 @@ def _so_digitos(s: str | None) -> str | None:
     if s is None:
         return None
     return "".join(c for c in s if c.isdigit())
+
+
+def _status_do_erro(e: Exception) -> int:
+    """Classifica a exceção upstream no status que descreve a causa real.
+
+    `ComprasTimeoutError` e `ComprasServerError` são subclasses de
+    `ComprasHTTPError`, então um `else: 400` os varria todos para
+    "requisição malformada" — dizendo ao analista que os parâmetros dele
+    estavam errados quando o PNCP é que estava lento ou fora do ar. Mesmo
+    tipo de confusão de linguagem corrigida na v0.3.5 para o par 400/404,
+    só que na outra ponta.
+    """
+    if isinstance(e, ComprasNotFoundError):
+        return 404
+    if isinstance(e, ComprasTimeoutError):
+        return 504
+    if isinstance(e, ComprasServerError):
+        return 502
+    return 400
 
 
 def _resposta_pncp_singular_404(
@@ -121,6 +145,31 @@ def _resposta_pncp_singular_404(
             "codigo_modalidade)` com janela curta + filtro por `cnpj_orgao`.",
             "Para contratos federais SISG: `compras_contratos_listar(codigo_orgao, "
             "data_vigencia_inicial_min, data_vigencia_inicial_max)`.",
+        ]
+    elif status == 504:
+        diagnostico = (
+            "Timeout na chamada ao PNCP. **Não é erro de parâmetro** — a "
+            "consulta não chegou a ser respondida. O PNCP tem janelas "
+            "recorrentes de lentidão (503/timeout) que afetam todas as "
+            "rotas de uma vez; nesses períodos a mesma chamada volta a "
+            "funcionar minutos depois sem nenhuma mudança nos argumentos."
+        )
+        alternativas = [
+            "Repita a chamada em alguns minutos — os argumentos provavelmente "
+            "estão corretos.",
+            "Confira o estado geral do upstream com `compras_healthcheck"
+            "(profundidade='completo')` antes de investigar os parâmetros.",
+        ]
+    elif status == 502:
+        diagnostico = (
+            "O PNCP respondeu com erro de servidor (5xx). **Não é erro de "
+            "parâmetro** — a falha é do lado do upstream, que costuma "
+            "devolver 503 em janelas de indisponibilidade."
+        )
+        alternativas = [
+            "Repita a chamada em alguns minutos.",
+            "Confira o estado geral do upstream com `compras_healthcheck"
+            "(profundidade='completo')`.",
         ]
     else:
         diagnostico = (
@@ -422,7 +471,7 @@ async def compras_pncp_contratacao_por_orgao(
                 f"/v1/orgaos/{cnpj_clean}/compras/{ano}/{sequencial}"
             )
     except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
-        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        status = _status_do_erro(e)
         return with_latency(
             _resposta_pncp_singular_404(
                 f"/v1/orgaos/{cnpj_clean}/compras/{ano}/{sequencial}",
@@ -478,7 +527,7 @@ async def compras_pncp_contratacao_itens(
                 tamanho_pagina=tamanho_pagina,
             )
     except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
-        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        status = _status_do_erro(e)
         return with_latency(
             _resposta_pncp_singular_404(
                 f"/v1/orgaos/{cnpj_clean}/compras/{ano}/{sequencial}/itens",
@@ -524,7 +573,7 @@ async def compras_pncp_contratacao_item_resultados(
                 f"/itens/{numero_item}/resultados"
             )
     except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
-        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        status = _status_do_erro(e)
         return with_latency(
             _resposta_pncp_singular_404(
                 f"/v1/orgaos/{cnpj_clean}/compras/{ano}/{sequencial}"
@@ -638,7 +687,7 @@ async def compras_pncp_contrato_por_orgao(
                 f"/v1/orgaos/{cnpj_clean}/contratos/{ano}/{sequencial}"
             )
     except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
-        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        status = _status_do_erro(e)
         return with_latency(
             _resposta_pncp_singular_404(
                 f"/v1/orgaos/{cnpj_clean}/contratos/{ano}/{sequencial}",
@@ -737,7 +786,7 @@ async def compras_pncp_contratacao_arquivos(
         async with make_pncp_api(get_settings()) as client:
             resp = await client.get_resource(path)
     except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
-        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        status = _status_do_erro(e)
         return with_latency(
             _resposta_pncp_singular_404(
                 path,
@@ -819,7 +868,7 @@ async def compras_pncp_ata_arquivos(
         async with make_pncp_api(get_settings()) as client:
             resp = await client.get_resource(path)
     except (ComprasNotFoundError, ComprasHTTPError, ComprasServerError) as e:
-        status = 404 if isinstance(e, ComprasNotFoundError) else 400
+        status = _status_do_erro(e)
         return with_latency(
             _resposta_pncp_singular_404(
                 path,

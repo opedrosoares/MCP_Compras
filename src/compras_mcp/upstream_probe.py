@@ -57,6 +57,9 @@ def _base_url(api: str, settings: Settings) -> str:
     return {
         "dados_abertos": settings.dados_abertos_base_url,
         "pncp": settings.pncp_base_url,
+        # Host separado: a rota de arquivos (Edital/TR/atas) só existe em
+        # /api/pncp, não em /api/consulta.
+        "pncp_api": settings.pncp_api_base_url,
         "transparencia": settings.transparencia_base_url,
         "comprasnet": settings.comprasnet_contratos_base_url,
         "cnpj": settings.brasilapi_base_url,

@@ -415,3 +415,255 @@ async def test_live_pesquisa_preco_material_ponta_a_ponta() -> None:
     primeiro = payload["resultado"][0]
     assert primeiro.get("precoUnitario") is not None
     assert primeiro.get("nomeFornecedor")
+
+
+# ===========================================================================
+# 5. API de arquivos do PNCP (host /api/pncp) — PR #1
+# ===========================================================================
+#
+# Esta família existe porque a rota de arquivos mora num host diferente do
+# resto do PNCP. `/api/consulta` exige `chave-api-dadosabertos` e não expõe
+# anexo nenhum; `/api/pncp` é aberto e é o único lugar onde o Edital/TR vive.
+# Uma "simplificação" que trocasse `make_pncp_api` por `make_pncp` devolveria
+# 404 em produção sem quebrar nenhum outro teste — daí travarmos o host.
+
+_RE_PNCP_ARQ_COMPRA = re.compile(
+    r"https://pncp\.gov\.br/api/pncp/v1/orgaos/\d+/compras/\d+/\d+/arquivos.*"
+)
+_RE_PNCP_ARQ_ATA = re.compile(
+    r"https://pncp\.gov\.br/api/pncp/v1/orgaos/\d+/compras/\d+/\d+/atas/\d+/arquivos.*"
+)
+
+# Amostra fiel da rota (campos conforme upstream em 2026-09-07).
+_ARQUIVO_EDITAL = {
+    "uri": "https://pncp.gov.br/pncp-api/v1/orgaos/00509018000113/compras/2025/2101/arquivos/2",
+    "url": "https://pncp.gov.br/pncp-api/v1/orgaos/00509018000113/compras/2025/2101/arquivos/2",
+    "tipoDocumentoNome": "Edital",
+    "tipoDocumentoDescricao": "Edital",
+    "statusAtivo": True,
+    "dataPublicacaoPncp": "2025-08-26T08:17:46",
+    "cnpj": "00509018000113",
+    "anoCompra": 2025,
+    "sequencialCompra": 2101,
+    "sequencialDocumento": 2,
+    "titulo": "07000805900422025001",
+    "tipoDocumentoId": 2,
+}
+
+
+@pytest.mark.asyncio
+async def test_arquivos_contratacao_usa_host_api_pncp(httpx_mock: HTTPXMock) -> None:
+    """Trava o host: tem que ser /api/pncp, não /api/consulta."""
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, json=[_ARQUIVO_EDITAL])
+
+    await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 2101},
+    )
+
+    url = str(httpx_mock.get_requests()[0].url)
+    assert "/api/pncp/" in url, f"rota de arquivos saiu do host errado: {url}"
+    assert "/api/consulta/" not in url
+
+
+@pytest.mark.asyncio
+async def test_arquivos_contratacao_sequencial_sem_zeros_a_esquerda(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """O path usa o sequencial cru; 002101 no lugar de 2101 devolve 404."""
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, json=[_ARQUIVO_EDITAL])
+
+    await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00.509.018/0001-13", "ano": 2025, "sequencial": 2101},
+    )
+
+    url = str(httpx_mock.get_requests()[0].url)
+    # CNPJ pontuado tem que chegar só com dígitos no path.
+    assert "/orgaos/00509018000113/compras/2025/2101/arquivos" in url
+
+
+@pytest.mark.asyncio
+async def test_arquivos_contratacao_normaliza_lista_crua(httpx_mock: HTTPXMock) -> None:
+    """Upstream devolve array cru (sem envelope `data`); a tool empacota."""
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, json=[_ARQUIVO_EDITAL])
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 2101},
+    )
+
+    assert payload["encontrado"] is True
+    assert payload["_total_registros"] == 1
+    assert payload["resultado"][0]["url"], "sem `url` a tool não serve para nada"
+    assert payload["resultado"][0]["tipoDocumentoNome"] == "Edital"
+    assert "_latency_ms" in payload
+
+
+@pytest.mark.asyncio
+async def test_arquivos_contratacao_lista_vazia_nao_finge_achado(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Contratação sem anexo tem que dizer `encontrado: False`, não `[None]`."""
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, json=[])
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 2101},
+    )
+
+    assert payload["encontrado"] is False
+    assert payload["resultado"] == []
+    assert payload["_total_registros"] == 0
+
+
+@pytest.mark.asyncio
+async def test_arquivos_contratacao_404_degrada_com_diagnostico(
+    httpx_mock: HTTPXMock,
+) -> None:
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, status_code=404, json={})
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 999999},
+    )
+
+    assert payload["encontrado"] is False
+    assert "_erro_upstream" in payload
+    assert payload["_erro_upstream"]["status"] == 404
+    assert payload["_erro_upstream"]["alternativas"]
+
+
+@pytest.mark.asyncio
+async def test_arquivos_ata_monta_path_aninhado(httpx_mock: HTTPXMock) -> None:
+    """A ata é sub-recurso da compra: compras/{ano}/{seq}/atas/{seqAta}."""
+    httpx_mock.add_response(
+        url=_RE_PNCP_ARQ_ATA,
+        json=[
+            {
+                "url": "https://pncp.gov.br/pncp-api/v1/orgaos/00509018000113"
+                "/compras/2025/2101/atas/1/arquivos/1",
+                "dataPublicacaoPncp": "2025-09-30T10:26:19",
+                "sequencialDocumento": 1,
+                "titulo": "Ata de Registro de Preços nº 00103",
+                "tipoDocumentoNome": "Ata de Registro de Preços",
+                "tipoDocumentoId": 11,
+            },
+            {
+                "url": "https://pncp.gov.br/pncp-api/v1/orgaos/00509018000113"
+                "/compras/2025/2101/atas/1/arquivos/2",
+                "dataPublicacaoPncp": "2026-08-19T09:48:12",
+                "sequencialDocumento": 2,
+                "titulo": "Termo aditivo: reequilíbrio dos Itens 2, 3 e 5.",
+                "tipoDocumentoNome": "Ata de Registro de Preços",
+                "tipoDocumentoId": 11,
+            },
+        ],
+    )
+
+    payload = await _run(
+        "compras_pncp_ata_arquivos",
+        {
+            "cnpj": "00509018000113",
+            "ano_compra": 2025,
+            "sequencial_compra": 2101,
+            "sequencial_ata": 1,
+        },
+    )
+
+    url = str(httpx_mock.get_requests()[0].url)
+    assert "/api/pncp/v1/orgaos/00509018000113/compras/2025/2101/atas/1/arquivos" in url
+    # Aditivo vem como documento extra do MESMO tipo da ata original: se a
+    # tool filtrasse por `tipoDocumentoNome`, o aditivo sumiria.
+    assert payload["_total_registros"] == 2
+    assert {d["sequencialDocumento"] for d in payload["resultado"]} == {1, 2}
+
+
+def test_registro_rotas_de_arquivo_exigem_url() -> None:
+    """Sem `url` no item, a tool devolve metadado sem serventia — HTTP 200
+    inútil, exatamente o caso que o registro de rotas existe para pegar.
+    """
+    for rota_id in ("pncp_compra_arquivos", "pncp_ata_arquivos"):
+        rota = rota_por_id(rota_id)
+        assert rota is not None, f"rota '{rota_id}' sumiu do registro"
+        assert "url" in rota.campos_esperados, (
+            f"'{rota_id}' não trava o campo `url` — quebra passaria como 200 OK"
+        )
+        assert rota.api == "pncp_api", "rota de arquivos aponta para o host errado"
+
+
+# ===========================================================================
+# 6. Classificação de erro do PNCP — timeout/5xx não são erro de parâmetro
+# ===========================================================================
+#
+# `ComprasTimeoutError` e `ComprasServerError` herdam de `ComprasHTTPError`,
+# então o antigo `else: 400` varria os dois para "requisição malformada". Na
+# prática isso mandava o analista revisar argumentos corretos enquanto o PNCP
+# estava só lento — observado ao vivo em 2026-09-07, com /api/consulta
+# devolvendo 503/timeout em todas as rotas ao mesmo tempo.
+
+
+@pytest.mark.asyncio
+async def test_pncp_timeout_nao_vira_erro_de_parametro(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_exception(httpx.ReadTimeout("upstream lento"), url=_RE_PNCP_ARQ_COMPRA)
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 2101},
+    )
+
+    erro = payload["_erro_upstream"]
+    assert erro["status"] == 504, "timeout classificado como erro de parâmetro"
+    assert "parâmetro" not in erro["diagnostico"] or "Não é erro de parâmetro" in (
+        erro["diagnostico"]
+    )
+    assert "rejeitou os parâmetros" not in erro["diagnostico"]
+    assert erro["alternativas"], "timeout sem alternativa não ajuda o analista"
+
+
+@pytest.mark.asyncio
+async def test_pncp_503_nao_vira_erro_de_parametro(httpx_mock: HTTPXMock) -> None:
+    """O PNCP devolve 503 em janelas de indisponibilidade — culpar os
+    argumentos do analista nesse caso custa uma investigação inteira à toa.
+    """
+    httpx_mock.add_response(
+        url=_RE_PNCP_ARQ_COMPRA, status_code=503, text="Service Unavailable"
+    )
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 2101},
+    )
+
+    erro = payload["_erro_upstream"]
+    assert erro["status"] == 502
+    assert "rejeitou os parâmetros" not in erro["diagnostico"]
+    assert erro["alternativas"]
+
+
+@pytest.mark.asyncio
+async def test_pncp_404_continua_sendo_404(httpx_mock: HTTPXMock) -> None:
+    """Regressão da correção acima: 404 não pode ter virado 502/504."""
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, status_code=404, json={})
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 999999},
+    )
+
+    assert payload["_erro_upstream"]["status"] == 404
+
+
+@pytest.mark.asyncio
+async def test_pncp_400_continua_sendo_400(httpx_mock: HTTPXMock) -> None:
+    """E um 400 de verdade continua acusando parâmetro malformado."""
+    httpx_mock.add_response(url=_RE_PNCP_ARQ_COMPRA, status_code=400, text="bad request")
+
+    payload = await _run(
+        "compras_pncp_contratacao_arquivos",
+        {"cnpj": "00509018000113", "ano": 2025, "sequencial": 1},
+    )
+
+    erro = payload["_erro_upstream"]
+    assert erro["status"] == 400
+    assert "rejeitou os parâmetros" in erro["diagnostico"]
