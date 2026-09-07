@@ -23,6 +23,7 @@ from compras_mcp.schemas import (
     ConsultarCatmatInput,
     ConsultarCatserInput,
     ListarPaginadoInput,
+    ListarPdmMaterialInput,
 )
 from compras_mcp.tools._helpers import (
     desc,
@@ -162,6 +163,84 @@ async def compras_catmat_consultar(
 
 
 @mcp.tool(annotations=SOMENTE_LEITURA)
+async def compras_catmat_listar_pdms(
+    codigo_classe: Annotated[
+        int | None, Field(default=None, description=desc(ListarPdmMaterialInput, "codigo_classe"))
+    ] = None,
+    codigo_grupo: Annotated[
+        int | None, Field(default=None, description=desc(ListarPdmMaterialInput, "codigo_grupo"))
+    ] = None,
+    codigo_pdm: Annotated[
+        int | None, Field(default=None, description=desc(ListarPdmMaterialInput, "codigo_pdm"))
+    ] = None,
+    apenas_ativos: Annotated[
+        bool | None, Field(default=None, description=desc(ListarPdmMaterialInput, "apenas_ativos"))
+    ] = None,
+    pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
+    tamanho_pagina: Annotated[
+        int, Field(description=desc(ListarPaginadoInput, "tamanho_pagina"))
+    ] = 50,
+) -> dict[str, Any]:
+    """Lista os PDMs (Padrão Descritivo de Material) do CATMAT.
+
+    Endpoint `/modulo-material/3_consultarPdmMaterial`. É o terceiro nível da
+    hierarquia do catálogo: grupo → classe → **PDM** → item.
+
+    O PDM é o que dá nome à família do material ("CADEIRA ESCRITÓRIO",
+    "MICROCOMPUTADOR"), enquanto o item é uma variação específica dela. Como a
+    API não faz busca por substring, descer até o PDM é a forma prática de
+    localizar o material certo antes de pedir os itens.
+
+    Uma classe devolve suas dezenas de PDMs nomeados em **uma** chamada — a
+    classe 7110 (Mobiliário de escritório) tem 98 PDMs. A alternativa seria
+    varrer milhares de itens e deduplicar `codigoPdm` client-side.
+
+    **Isto é navegação hierárquica, não busca**: o endpoint não tem filtro
+    textual. Combine com `compras_catmat_listar_grupos` e
+    `compras_catmat_listar_classes` para descer a hierarquia, e depois passe o
+    `codigo_pdm` para `compras_catmat_buscar`.
+
+    Cache 24h.
+    """
+    started = time.perf_counter()
+    key = _cache_key(
+        "catmat_pdms",
+        codigo_grupo,
+        codigo_classe,
+        codigo_pdm,
+        apenas_ativos,
+        pagina,
+        tamanho_pagina,
+    )
+    cached = await _catalogo_cache.get(key)
+    if cached is not None:
+        cached["_cache_hit"] = True
+        return with_latency(cached, started)
+
+    filtros: dict[str, Any] = {}
+    if codigo_grupo is not None:
+        filtros["codigoGrupo"] = codigo_grupo
+    if codigo_classe is not None:
+        filtros["codigoClasse"] = codigo_classe
+    if codigo_pdm is not None:
+        filtros["codigoPdm"] = codigo_pdm
+    if apenas_ativos is not None:
+        filtros["statusPdm"] = "true" if apenas_ativos else "false"
+
+    async with make_dados_abertos(get_settings()) as client:
+        resp = await client.list_resource(
+            "/modulo-material/3_consultarPdmMaterial",
+            pagina=pagina,
+            tamanho_pagina=tamanho_pagina,
+            **filtros,
+        )
+    payload = envelope_dados_abertos(resp, pagina_atual=pagina)
+    payload["_cache_hit"] = False
+    await _catalogo_cache.set(key, json.loads(json.dumps(payload)))
+    return with_latency(payload, started)
+
+
+@mcp.tool(annotations=SOMENTE_LEITURA)
 async def compras_catmat_buscar(
     termo: Annotated[str, Field(description=desc(BuscarItemCatalogoInput, "termo"))],
     codigo_grupo: Annotated[
@@ -186,6 +265,17 @@ async def compras_catmat_buscar(
             ),
         ),
     ] = None,
+    codigo_pdm: Annotated[
+        int | None,
+        Field(
+            default=None,
+            description=(
+                "Filtro estrutural por PDM (Padrão Descritivo de Material). "
+                "É o recorte mais preciso do CATMAT: agrupa as variações de um "
+                "mesmo material. Obtenha o código em `compras_catmat_listar_pdms`."
+            ),
+        ),
+    ] = None,
     pagina: Annotated[
         int, Field(description=desc(BuscarItemCatalogoInput, "pagina"))
     ] = 1,
@@ -195,39 +285,55 @@ async def compras_catmat_buscar(
 ) -> dict[str, Any]:
     """Busca itens CATMAT.
 
-    **⚠️ Atenção upstream**: o filtro textual `descricao` do Dados Abertos
-    está ignorando o valor enviado e devolvendo o universo CATMAT inteiro
-    (~340k itens, começando por arma de fogo) desde meados de 2026.
-    Confirmado via probe direto. Os filtros estruturais (`codigo_grupo`,
-    `codigo_classe`, `codigo_pdm`) continuam funcionando.
+    **⚠️ Não existe busca por substring nesta API.** O contrato do
+    `/modulo-material/4_consultarItemMaterial` oferece `descricaoItem`, que é
+    **match exato**: `descricaoItem='CADEIRA'` devolve zero registros, embora o
+    catálogo tenha milhares de itens começando por "CADEIRA ESCRITÓRIO...".
+    Não é um filtro degradado — é um filtro de igualdade, e o termo livre que o
+    usuário digita quase nunca casa com a descrição inteira do item.
 
-    **Workflow recomendado enquanto o filtro textual não voltar**:
+    Por isso o `termo` **não** é enviado ao upstream: mandá-lo faria a chamada
+    retornar o universo inteiro (~340 mil itens) sem nenhum aviso. Ele é usado
+    para ordenar e marcar os resultados do recorte estrutural, e a filtragem
+    real vem de `codigo_grupo`, `codigo_classe` e `codigo_pdm`.
+
+    **Workflow recomendado**:
     1. `compras_catmat_listar_grupos()` → escolher o grupo (ex.: 71=Mobiliários).
-    2. `compras_catmat_listar_classes(codigo_grupo=71)` → escolher a classe
-       (ex.: 7110=Mobiliário para Escritório).
-    3. `compras_catmat_buscar(termo='cadeira', codigo_grupo=71, codigo_classe=7110)`
-       → o `termo` ainda é enviado (mantém compatibilidade), mas a redução
-       real virá dos códigos estruturais.
+    2. `compras_catmat_listar_classes(codigo_grupo=71)` → a classe (ex.: 7110).
+    3. `compras_catmat_listar_pdms(codigo_classe=7110)` → o PDM do material.
+    4. `compras_catmat_buscar(termo='cadeira', codigo_pdm=...)`.
 
-    Esta tool emite `_aviso_filtro` no payload quando detecta que o upstream
-    devolveu o universo inteiro.
+    Esta tool emite `_aviso_filtro` no payload quando o recorte informado é
+    largo demais para ser útil.
 
     Cache 24h por (termo + filtros + página).
     """
     started = time.perf_counter()
     key = _cache_key(
-        "catmat_buscar", termo, codigo_grupo, codigo_classe, pagina, tamanho_pagina
+        "catmat_buscar",
+        termo,
+        codigo_grupo,
+        codigo_classe,
+        codigo_pdm,
+        pagina,
+        tamanho_pagina,
     )
     cached = await _catalogo_cache.get(key)
     if cached is not None:
         cached["_cache_hit"] = True
         return with_latency(cached, started)
 
-    filtros: dict[str, Any] = {"descricao": termo}
+    # `descricao` não existe no contrato desta rota (o campo declarado é
+    # `descricaoItem`, de match exato). Parâmetro fora do contrato é ignorado
+    # em silêncio pelo upstream, então enviá-lo só devolvia o catálogo inteiro
+    # com aparência de busca. O recorte real vem dos códigos estruturais.
+    filtros: dict[str, Any] = {}
     if codigo_grupo is not None:
         filtros["codigoGrupo"] = codigo_grupo
     if codigo_classe is not None:
         filtros["codigoClasse"] = codigo_classe
+    if codigo_pdm is not None:
+        filtros["codigoPdm"] = codigo_pdm
 
     async with make_dados_abertos(get_settings()) as client:
         resp = await client.list_resource(
@@ -239,14 +345,15 @@ async def compras_catmat_buscar(
     payload = envelope_dados_abertos(resp, pagina_atual=pagina)
     payload["_cache_hit"] = False
 
-    # Detecção do bug upstream: filtro textual `descricao` ignorado. Duas
-    # heurísticas — antes da v0.3.6 só tínhamos (A):
-    # (A) Universo absoluto inteiro: total >= 200k → catálogo completo.
+    # Detecção de recorte largo demais. Como a API não oferece busca por
+    # substring, o `termo` nunca chega ao upstream — estas heurísticas medem
+    # se os códigos estruturais informados foram suficientes:
+    # (A) Universo absoluto inteiro: total >= 200k → nenhum recorte efetivo.
     # (B) Termo ausente dos resultados: se o usuário passou `termo` mas ele
-    #     aparece em <50% da 1ª página, o filtro foi ignorado — só que
-    #     dentro do sub-recorte de grupo/classe. Caso real (bateria A
-    #     v0.3.5): termo='notebook' + codigo_classe=7010 devolveu 1312
-    #     itens (servidores/desktops), 0 com "notebook" na primeira página.
+    #     aparece em <50% da 1ª página, o recorte estrutural é largo demais
+    #     para o que ele procura. Caso real (bateria A v0.3.5):
+    #     termo='notebook' + codigo_classe=7010 devolveu 1312 itens
+    #     (servidores/desktops), 0 com "notebook" na primeira página.
     total = payload.get("_total_registros", 0)
     items = payload.get("resultado") or []
     aviso_motivo: str | None = None
@@ -256,8 +363,9 @@ async def compras_catmat_buscar(
     if total >= 200_000:
         tipo_aviso = "universo_completo"
         aviso_motivo = (
-            f"Upstream retornou {total} itens — universo completo, filtro "
-            "textual ignorado. Reforce com `codigo_grupo` e `codigo_classe`."
+            f"Upstream retornou {total} itens — o catálogo inteiro. Esta API "
+            "não faz busca por substring; informe `codigo_grupo`, "
+            "`codigo_classe` ou `codigo_pdm` para obter um recorte real."
         )
     elif termo and items:
         termo_norm = termo.lower().strip()
@@ -273,10 +381,10 @@ async def compras_catmat_buscar(
                 tipo_aviso = "termo_ausente"
                 aviso_motivo = (
                     f"Termo '{termo}' apareceu em apenas {hits}/{len(amostra)} "
-                    f"itens da primeira página ({taxa:.0%}) — filtro textual "
-                    "ignorado pelo upstream mesmo com filtros estruturais. "
-                    "Use `codigo_classe` mais específico ou filtre client-side "
-                    "pelo campo `descricaoItem` dos resultados."
+                    f"itens da primeira página ({taxa:.0%}). O termo não é "
+                    "enviado ao upstream (a API não busca por substring), "
+                    "então o recorte veio só dos códigos estruturais e está "
+                    "largo demais. Desça para `codigo_classe` ou `codigo_pdm`."
                 )
 
     if aviso_motivo:
@@ -301,8 +409,9 @@ async def compras_catmat_buscar(
             payload["resultado"] = reordenado
             payload["_reordenado_client_side"] = (
                 "Itens contendo o termo na descrição foram movidos para o "
-                "topo (filtro textual upstream está quebrado — sem isso o "
-                "PDM relevante ficaria escondido em páginas profundas)."
+                "topo. A busca textual é feita aqui, client-side, porque a "
+                "API só oferece match exato — sem isso o PDM relevante "
+                "ficaria escondido em páginas profundas."
             )
 
     await _catalogo_cache.set(key, json.loads(json.dumps(payload)))

@@ -25,7 +25,7 @@ mcp: FastMCP = FastMCP(
 
 # Annotations MCP aplicadas a todas as tools deste servidor.
 #
-# As 94 tools são wrappers de leitura sobre APIs públicas do governo: nenhuma
+# As 100 tools são wrappers de leitura sobre APIs públicas do governo: nenhuma
 # cria, altera ou remove dado upstream. O único POST do portfólio
 # (`ComprasnetContratosClient.post_json`, usado em `/compras/impedimentos`)
 # é consulta com lista de itens no corpo, não escrita.

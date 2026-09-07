@@ -148,10 +148,42 @@ def _resposta_uasg_404(endpoint_path: str) -> dict[str, Any]:
                 "Para listar UGs federais: GET https://contratos.comprasnet.gov.br/api/contrato/unidades "
                 "(via cliente HTTP genérico — retorna só códigos)",
                 "Para listar UGs com contratos vigentes: `compras_contrato_comprasnet_por_uasg(uasg)`",
-                "Para contratações de um órgão: `compras_contratacoes_14133_listar(codigo_orgao=...)`",
+                "Para contratações de um órgão: "
+                "`compras_contratacoes_14133_listar(cnpj_orgao=...)` — use o CNPJ, "
+                "não o código: o `codigo_orgao_pncp` daquela rota é de outro "
+                "espaço de códigos e o código SIASG não casa lá",
             ],
         },
     }
+
+
+async def _cnpj_do_orgao(client: Any, codigo_orgao: int) -> str | None:
+    """Traduz código de órgão em CNPJ, porque `/modulo-uasg/1` só filtra por CNPJ.
+
+    A rota de UASGs **não declara** `codigoOrgao` no contrato OpenAPI, e esta
+    API ignora chave desconhecida em silêncio: `codigoOrgao=26246` devolvia as
+    22.052 UASGs do Brasil inteiro, idêntico a não filtrar (medido em
+    2026-09-07, junto com um parâmetro de controle inventado). O filtro que
+    existe é `cnpjCpfOrgao` — e o CNPJ do órgão está na rota de órgãos, que
+    esta sim aceita `codigoOrgao`. Daí o salto em dois tempos.
+    """
+    for status in ("true", "false"):
+        resp = await client.list_resource(
+            "/modulo-uasg/2_consultarOrgao",
+            pagina=1,
+            tamanho_pagina=10,
+            codigoOrgao=codigo_orgao,
+            statusOrgao=status,
+        )
+        for item in resp.get("resultado") or []:
+            cnpj = str(item.get("cnpjCpfOrgao") or "").strip()
+            # `"0"` é o sentinela de "órgão sem CNPJ próprio" — 39 dos 11.957
+            # órgãos ativos vêm assim. Tratado como CNPJ, ele vira um filtro
+            # válido: `cnpjCpfOrgao=0` devolve 15 UASGs de órgãos variados,
+            # com cara de recorte preciso. Pior que não filtrar.
+            if len(cnpj) == 14 and cnpj.strip("0"):
+                return cnpj
+    return None
 
 
 @mcp.tool(annotations=SOMENTE_LEITURA)
@@ -191,6 +223,21 @@ async def compras_uasg_listar(
     páginas fixas de 500 registros — `_total_paginas` reflete a paginação
     real do servidor, não o tamanho pedido.
 
+    **`codigo_orgao` corrigido em 2026-09-07.** O filtro era enviado como
+    `codigoOrgao`, chave que esta rota não declara: a resposta vinha com as
+    22 mil UASGs do país, sem aviso, como se o órgão não tivesse recorte
+    nenhum. Agora a tool resolve o código para o CNPJ do órgão e filtra por
+    `cnpjCpfOrgao` — órgão 26246 (UFSC) devolve 3 UASGs. Custa uma chamada
+    extra a `/modulo-uasg/2_consultarOrgao`.
+
+    Duas ressalvas, ambas tratadas aqui: **CNPJ não identifica órgão** (599
+    dos 11.957 órgãos ativos compartilham CNPJ com outro — as 7 unidades do
+    CNPJ da Polícia Federal devolviam 110 UASGs, das quais só 8 do órgão
+    pedido), então o resultado é reduzido client-side pelo `codigoOrgao` de
+    cada UASG; e **39 órgãos não têm CNPJ próprio** (o upstream grava `"0"`),
+    caso em que a tool devolve lista vazia com `_aviso_filtro` em vez de um
+    recorte falso.
+
     Cache 24h.
     """
     started = time.perf_counter()
@@ -201,14 +248,36 @@ async def compras_uasg_listar(
         return with_latency(cached, started)
 
     filtros: dict[str, Any] = {}
-    if codigo_orgao is not None:
-        filtros["codigoOrgao"] = codigo_orgao
     # `statusUasg` é obrigatório no contrato: omitir devolve 404. O nome
     # antigo (`ativo`) não existe upstream e era silenciosamente ignorado.
     filtros["statusUasg"] = "false" if ativo is False else "true"
 
     try:
         async with make_dados_abertos(get_settings()) as client:
+            if codigo_orgao is not None:
+                cnpj_orgao = await _cnpj_do_orgao(client, codigo_orgao)
+                if cnpj_orgao is None:
+                    vazio = {
+                        "resultado": [],
+                        "_pagina_atual": pagina,
+                        "_total_paginas": 0,
+                        "_total_registros": 0,
+                        "_proxima_pagina": None,
+                        "_cache_hit": False,
+                        "_aviso_filtro": (
+                            f"Órgão {codigo_orgao} não tem CNPJ próprio no "
+                            "cadastro (o upstream grava `\"0\"`) ou não existe "
+                            "em `/modulo-uasg/2_consultarOrgao`. Como esta rota "
+                            "só filtra UASG por CNPJ, não há recorte possível "
+                            "por este órgão — confirme o código em "
+                            "`compras_orgao_consultar`. Devolver a lista "
+                            "inteira, ou as UASGs que o upstream associa ao "
+                            "CNPJ `0`, seria pior: pareceria resposta ao filtro "
+                            "pedido."
+                        ),
+                    }
+                    return with_latency(vazio, started)
+                filtros["cnpjCpfOrgao"] = cnpj_orgao
             resp = await client.list_resource(
                 "/modulo-uasg/1_consultarUasg",
                 pagina=pagina,
@@ -219,6 +288,25 @@ async def compras_uasg_listar(
         return with_latency(_resposta_uasg_404("/modulo-uasg/1_consultarUasg"), started)
     payload = envelope_dados_abertos(resp, pagina_atual=pagina)
     payload["_cache_hit"] = False
+
+    # O CNPJ é do órgão-mãe, não do órgão: filtrar por ele traz junto as UASGs
+    # de todo órgão que compartilhe o CNPJ. O payload de `/modulo-uasg/1` traz
+    # `codigoOrgao`, então o recorte fino sai de graça aqui.
+    if codigo_orgao is not None:
+        itens = payload.get("resultado") or []
+        do_orgao = [
+            uasg for uasg in itens if uasg.get("codigoOrgao") == codigo_orgao
+        ]
+        if len(do_orgao) != len(itens):
+            payload["resultado"] = do_orgao
+            payload["_filtro_client_side"] = (
+                f"{len(do_orgao)} de {len(itens)} UASGs desta página são do "
+                f"órgão {codigo_orgao}. O upstream só filtra por CNPJ, e este "
+                "CNPJ é compartilhado com outros órgãos — o recorte final é "
+                "feito aqui; `_total_registros` é a contagem do servidor para o "
+                "CNPJ, sem esse recorte."
+            )
+
     await _orgaos_cache.set(key, json.loads(json.dumps(payload, default=str)))
     return with_latency(payload, started)
 
@@ -316,11 +404,15 @@ async def compras_orgao_listar(
     **✅ Restaurada em 2026-08-05**: faltava o parâmetro obrigatório
     `statusOrgao` — mesma causa do 404 em `compras_uasg_listar`.
 
-    **⚠️ Filtros textuais não funcionam**: `nome`, `esfera` e `poder` não
-    constam do contrato desta rota e são ignorados pelo upstream (a
-    resposta vem igual, com todos os ~11,8 mil órgãos ativos). Para
-    localizar um órgão específico use `codigo_orgao` em
-    `compras_orgao_consultar`. Verificado em 2026-08-05.
+    **`nome`, `esfera` e `poder` são aplicados aqui, client-side.** Nenhum
+    dos três consta do contrato desta rota, e esta API ignora chave
+    desconhecida em silêncio — mandá-los devolvia os ~11,9 mil órgãos
+    ativos com cara de resultado filtrado (reconfirmado em 2026-09-07 com
+    parâmetro de controle). Desde 2026-09-07 eles não são mais enviados: o
+    recorte é feito sobre a página trazida, e o payload traz
+    `_filtro_client_side` dizendo quantos sobraram. Consequência prática:
+    o filtro só enxerga a página atual, então varra as páginas ou use
+    `codigo_orgao` em `compras_orgao_consultar` quando souber o código.
 
     Cache 24h.
     """
@@ -331,14 +423,9 @@ async def compras_orgao_listar(
         cached["_cache_hit"] = True
         return with_latency(cached, started)
 
-    # `statusOrgao` é obrigatório no contrato: omitir devolve 404.
+    # `statusOrgao` é obrigatório no contrato: omitir devolve 404. Os demais
+    # recortes ficam de fora da query de propósito — ver docstring.
     filtros: dict[str, Any] = {"statusOrgao": "true"}
-    if nome:
-        filtros["nome"] = nome
-    if esfera:
-        filtros["esferaAdministrativa"] = esfera.upper()
-    if poder:
-        filtros["poder"] = poder.upper()
 
     try:
         async with make_dados_abertos(get_settings()) as client:
@@ -352,6 +439,29 @@ async def compras_orgao_listar(
         return with_latency(_resposta_uasg_404("/modulo-uasg/2_consultarOrgao"), started)
     payload = envelope_dados_abertos(resp, pagina_atual=pagina)
     payload["_cache_hit"] = False
+
+    itens = payload.get("resultado") or []
+    if itens and (nome or esfera or poder):
+        def _casa(orgao: dict[str, Any]) -> bool:
+            if nome:
+                alvo = " ".join(
+                    str(orgao.get(campo) or "")
+                    for campo in ("nomeOrgao", "nomeMnemonicoOrgao")
+                ).lower()
+                if nome.lower().strip() not in alvo:
+                    return False
+            if esfera and str(orgao.get("esfera") or "").upper() != esfera.upper():
+                return False
+            return not (poder and str(orgao.get("poder") or "").upper() != poder.upper())
+
+        filtrados = [orgao for orgao in itens if _casa(orgao)]
+        payload["resultado"] = filtrados
+        payload["_filtro_client_side"] = (
+            f"{len(filtrados)} de {len(itens)} órgãos desta página atendem ao "
+            "recorte pedido. O upstream não oferece esses filtros, então eles "
+            "são aplicados aqui — `_total_registros` continua sendo a contagem "
+            "do servidor, sem o recorte."
+        )
     await _orgaos_cache.set(key, json.loads(json.dumps(payload, default=str)))
     return with_latency(payload, started)
 

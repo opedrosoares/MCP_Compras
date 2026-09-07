@@ -1,0 +1,2085 @@
+{
+ "_fonte": "https://dadosabertos.compras.gov.br/v3/api-docs",
+ "_openapi": "3.1.0",
+ "_versao_api": "1.0.0",
+ "_capturado_em": "2026-09-07",
+ "_como_regerar": "COMPRAS_LIVE_TESTS=1 pytest tests/test_contrato_upstream.py -k openapi_snapshot",
+ "paths": {
+  "/alice/avisos-restritos": {
+   "dataFimIntervalo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataInicioIntervalo": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/alice/compras": {
+   "chavesCompra": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/alice/tickets": {
+   "tickets": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/autenticacao/login": {},
+  "/modulo-arp/1.1_consultarARP_Id": {
+   "dataAtualizacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroControlePncpAta": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-arp/1.2_consultarARP_FimVigencia": {
+   "codigoModalidadeCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGerenciadora": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAssinaturaFinal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAssinaturaInicial": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataVigenciaFinalMax": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataVigenciaFinalMin": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "numeroAtaRegistroPreco": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-arp/1_consultarARP": {
+   "codigoModalidadeCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGerenciadora": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAssinaturaFinal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAssinaturaInicial": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataVigenciaInicialMax": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataVigenciaInicialMin": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "numeroAtaRegistroPreco": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-arp/2.1_consultarARPItem_Id": {
+   "dataAtualizacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroControlePncpAta": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-arp/2_consultarARPItem": {
+   "codigoItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoModalidadeCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGerenciadora": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAssinaturaFinal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAssinaturaInicial": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataVigenciaInicialMax": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataVigenciaInicialMin": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "niFornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipoItem": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-arp/3_consultarUnidadesItem": {
+   "dataAtualizacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroAta": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "numeroItem": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeGerenciadora": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-arp/4_consultarEmpenhosSaldoItem": {
+   "dataAtualizacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroAta": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeGerenciadora": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-arp/5_consultarAdesoesItem": {
+   "dataAtualizacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroAta": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "numeroItem": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidade": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeGerenciadora": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-contratacoes/1.1_consultarContratacoes_PNCP_14133_Id": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataAtualizacaoPncp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "idCompra",
+     "numeroControlePNCPCompra"
+    ]
+   }
+  },
+  "/modulo-contratacoes/1_consultarContratacoes_PNCP_14133": {
+   "amparoLegalCodigoPncp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoModalidade": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "contratacaoExcluida": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAualizacaoPncp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataPublicacaoPncpFinal": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataPublicacaoPncpInicial": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "orgaoEntidadeCnpj": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeOrgaoCodigoIbge": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeOrgaoCodigoUnidade": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeOrgaoUfSigla": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-contratacoes/2.1_consultarItensContratacoes_PNCP_14133_Id": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataAtualizacaoPncp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "idCompraItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "idCompra",
+     "numeroControlePNCPCompra"
+    ]
+   }
+  },
+  "/modulo-contratacoes/2_consultarItensContratacoes_PNCP_14133": {
+   "bps": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codFornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codItemCatalogo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoNCM": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataAtualizacaoPncp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataInclusaoPncpFinal": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataInclusaoPncpInicial": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "margemPreferenciaNormal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "materialOuServico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "orgaoEntidadeCnpj": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "situacaoCompraItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "temResultado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeOrgaoCodigoUnidade": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-contratacoes/3.1_consultarResultadoItensContratacoes_PNCP_14133_Id": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataAtualizacaoPncp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "idCompraItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "idCompra",
+     "numeroControlePNCPCompra"
+    ]
+   }
+  },
+  "/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133": {
+   "aplicacaoBeneficioMeepp": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "aplicacaoCriterioDesempate": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "aplicacaoMargemPreferencia": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoPais": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataResultadoPncpFinal": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataResultadoPncpInicial": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "naturezaJuridicaId": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "niFornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "orgaoEntidadeCnpj": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "porteFornecedorId": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "situacaoCompraItemResultadoId": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "unidadeOrgaoCodigoUnidade": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valorTotalHomologadoFinal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valorTotalHomologadoInicial": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valorUnitarioHomologadoFinal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valorUnitarioHomologadoInicial": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-contratos/1.1_consultarContratos_Id": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "idCompra",
+     "numeroControlePncpContrato"
+    ]
+   }
+  },
+  "/modulo-contratos/1.2_consultarContratos_FimVigencia": {
+   "codigoCategoria": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoModalidadeCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoOrgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoTipo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGestora": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGestoraOrigemContrato": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeRealizadoraCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataVigenciaFinalMax": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataVigenciaFinalMin": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "niFornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroContrato": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-contratos/1_consultarContratos": {
+   "codigoCategoria": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoModalidadeCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoOrgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoTipo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGestora": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGestoraOrigemContrato": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeRealizadoraCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataVigenciaInicialMax": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataVigenciaInicialMin": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "niFornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroContrato": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-contratos/2.1_consultarContratosItem_Id": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "idCompra",
+     "numeroControlePncpContrato"
+    ]
+   }
+  },
+  "/modulo-contratos/2_consultarContratosItem": {
+   "codigoItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoModalidadeCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoOrgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoUnidadeGestora": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeGestoraOrigemContrato": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUnidadeRealizadoraCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataVigenciaInicialMax": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataVigenciaInicialMin": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "esfera": {
+    "obrigatorio": false,
+    "enum": [
+     "Federal",
+     "Estadual",
+     "Municipal"
+    ]
+   },
+   "idCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "niFornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numeroContrato": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "poder": {
+    "obrigatorio": false,
+    "enum": [
+     "Executivo",
+     "Legislativo",
+     "Judiciário"
+    ]
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipoItem": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-fornecedor/1_consultarFornecedor": {
+   "ativo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "cnpj": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoCnae": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cpf": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "naturezaJuridicaId": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "porteEmpresaId": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-indicadores/1_consultarIndicadoresConsolidados": {},
+  "/modulo-indicadores/2_consultarIndicadoresPorPeriodo": {
+   "ano": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "mes": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/1.1_consultarLicitacao_Id": {
+   "dt_alteracao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "id_compra": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-legado/1_consultarLicitacao": {
+   "data_publicacao_final": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "data_publicacao_inicial": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "modalidade": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numero_aviso": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pertence14133": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "uasg": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/2.1_consultarItemLicitacao_Id": {
+   "dt_alteracao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "id_compra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "id_compra_item": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/2_consultarItemLicitacao": {
+   "cnpj_fornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigo_item_material": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigo_item_servico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cpfVencedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "decreto_7174": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "modalidade": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "numero_aviso": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "uasg": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/3.1_consultarPregoes_Id": {
+   "dt_alteracao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "id_compra": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-legado/3_consultarPregoes": {
+   "co_orgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_uasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "ds_tipo_pregao_compra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dt_data_edital_final": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dt_data_edital_inicial": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "numero": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pertence14133": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/4.1_consultarItensPregoes_Id": {
+   "dt_alteracao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "id_compra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "id_compra_item": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/4_consultarItensPregoes": {
+   "co_uasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "decreto_7174": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dt_hom_final": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dt_hom_inicial": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "fornecedor_vencedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/5.1_consultarCompraSemLicitacao_Id": {
+   "idCompra": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-legado/5_consultarComprasSemLicitacao": {
+   "co_modalidade_licitacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_orgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_orgao_superior": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_uasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dtDeclaracaoDispensaFinal": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dtDeclaracaoDispensaInicial": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dtPublicacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dtRatificacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dt_ano_aviso": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "nu_aviso_licitacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pertence14133": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/6.1_consultarItensComprasSemLicitacao_Id": {
+   "dt_alteracao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "id_compra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "id_compra_item": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/6_consultarCompraItensSemLicitacao": {
+   "co_conjunto_materiais": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_modalidade_licitacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_orgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_servico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "co_uasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dt_ano_aviso_licitacao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "nu_cpf_cnpj_fornecedor": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-legado/7_consultarRdc": {
+   "data_publicacao_max": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "data_publicacao_min": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "endereco_entrega_edital": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "forma_de_realizacao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "funcao_responsavel": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "modalidade": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "nome_responsavel": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "numero_aviso": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "objeto": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "orgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "situacao_aviso": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "uasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "uf_uasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valor_estimado_total_max": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valor_estimado_total_min": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valor_homologado_total_max": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "valor_homologado_total_min": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/1_consultarGrupoMaterial": {
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/2_consultarClasseMaterial": {
+   "bps": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusClasse": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/3_consultarPdmMaterial": {
+   "bps": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/4_consultarItemMaterial": {
+   "bps": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigo_ncm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "descricaoItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/5_consultarMaterialNaturezaDespesa": {
+   "codigoNaturezaDespesa": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusNaturezaDespesa": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/6_consultarMaterialUnidadeFornecimento": {
+   "codigoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusUnidadeFornecimentoPdm": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-material/7_consultarMaterialCaracteristicas": {
+   "codigoItem": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-ocds/1_releases": {
+   "buyerID": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "offSet": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "page": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "releaseEndDate": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "releaseStartDate": {
+    "obrigatorio": true,
+    "enum": null
+   }
+  },
+  "/modulo-pesquisa-preco/1.1_consultarMaterial_CSV": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoMunicipio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataResultado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "esfera": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "estado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "idCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "poder": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "codigoItemCatalogo",
+     "codigoPdm"
+    ]
+   }
+  },
+  "/modulo-pesquisa-preco/1_consultarMaterial": {
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoMunicipio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataResultado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "esfera": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "estado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "idCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "poder": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "codigoItemCatalogo",
+     "codigoPdm"
+    ]
+   }
+  },
+  "/modulo-pesquisa-preco/2.1_consultarMaterialDetalhe_CSV": {
+   "codigoItemCatalogo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pesquisa-preco/2_consultarMaterialDetalhe": {
+   "codigoItemCatalogo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pesquisa-preco/3.1_consultarServico_CSV": {
+   "codigoItemCatalogo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoMunicipio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataResultado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "esfera": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "estado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "idCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "poder": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pesquisa-preco/3_consultarServico": {
+   "codigoItemCatalogo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoMunicipio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataResultado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "esfera": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "estado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "idCompra": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "poder": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pesquisa-preco/4.1_consultarServicoDetalhe_CSV": {
+   "codigoItemCatalogo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pesquisa-preco/4_consultarServicoDetalhe": {
+   "codigoItemCatalogo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "dataCompraFim": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "dataCompraInicio": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pgc/1.1_consultarPgcDetalhe_CSV": {
+   "anoPcaProjetoCompra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "orgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pgc/1_consultarPgcDetalhe": {
+   "anoPcaProjetoCompra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "orgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pgc/2.1_consultarPgcDetalheCatalogo_CSV": {
+   "anoPcaProjetoCompra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "Servico",
+     "Material"
+    ]
+   }
+  },
+  "/modulo-pgc/2_consultarPgcDetalheCatalogo": {
+   "anoPcaProjetoCompra": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "codigo": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tipo": {
+    "obrigatorio": true,
+    "enum": [
+     "Servico",
+     "Material"
+    ]
+   }
+  },
+  "/modulo-pgc/3.1_consultarPgcAgregacao_CSV": {
+   "ano": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "orgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-pgc/3_consultarPgcAgregacao": {
+   "ano": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "orgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/1_consultarSecaoServico": {
+   "codigoSecao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusSecao": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/2_consultarDivisaoServico": {
+   "codigoDivisao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoSecao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusDivisao": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/3_consultarGrupoServico": {
+   "codigoDivisao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/4_consultarClasseServico": {
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/5_consultarSubClasseServico": {
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoSubclasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusSubclasse": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/6_consultarItemServico": {
+   "codigoClasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoCpc": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoDivisao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoGrupo": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoSecao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoServico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoSubclasse": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "exclusivoCentralCompras": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusServico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "tamanhoPagina": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/7_consultarUndMedidaServico": {
+   "codigoServico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusUnidadeMedida": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-servico/8_consultarNaturezaDespesaServico": {
+   "codigoNaturezaDespesa": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoServico": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusNaturezaDespesa": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-uasg/1.1_consultarUasg_CSV": {
+   "cnpjCpfOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoSuperior": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoVinculado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "siglaUf": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusUasg": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "usoSisg": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-uasg/1_consultarUasg": {
+   "cnpjCpfOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoSuperior": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoVinculado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoUasg": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "siglaUf": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusUasg": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "usoSisg": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-uasg/2.1_consultarOrgao_CSV": {
+   "cnpjCpfOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoSuperior": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoVinculado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusOrgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "usoSisg": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/modulo-uasg/2_consultarOrgao": {
+   "cnpjCpfOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoSuperior": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "cnpjCpfOrgaoVinculado": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "codigoOrgao": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "pagina": {
+    "obrigatorio": false,
+    "enum": null
+   },
+   "statusOrgao": {
+    "obrigatorio": true,
+    "enum": null
+   },
+   "usoSisg": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/usuarios/atualizar/{id}": {},
+  "/usuarios/consultar": {
+   "id": {
+    "obrigatorio": false,
+    "enum": null
+   }
+  },
+  "/usuarios/criar": {},
+  "/usuarios/resetSenha/{id}": {}
+ }
+}

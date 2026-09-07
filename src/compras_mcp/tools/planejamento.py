@@ -130,6 +130,12 @@ async def compras_pgc_por_catalogo(
     Útil para responder: "Quais órgãos planejaram comprar esse item este ano?
     Em que quantidade?". Insumo para ETP e benchmarking de quantitativos.
 
+    **Corrigida em 2026-09-07.** A tool mandava `tipo=M`/`tipo=S` e o enum
+    upstream é `[Material, Servico]` — **toda** chamada devolvia HTTP 500
+    ("Failed to convert ... EnumPgcDetalheCatalogo ... for value [M]"). A
+    interface `M`/`S` foi mantida e a tradução passou a ser feita aqui.
+    Mesma classe de defeito do `tipo=C` das tools de contratações.
+
     Cache 1h.
     """
     started = time.perf_counter()
@@ -145,7 +151,7 @@ async def compras_pgc_por_catalogo(
             pagina=pagina,
             tamanho_pagina=tamanho_pagina,
             anoPcaProjetoCompra=ano,
-            tipo=tipo,
+            tipo="Material" if tipo == "M" else "Servico",
             codigo=codigo_item,
         )
     payload = envelope_dados_abertos(resp, pagina_atual=pagina)

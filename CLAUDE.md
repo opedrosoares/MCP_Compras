@@ -2,7 +2,7 @@
 
 Servidor MCP que reúne as APIs públicas do ecossistema Compras.gov.br
 (Dados Abertos, PNCP Consulta, Portal da Transparência/CGU e rotas abertas
-do Comprasnet Contratos) em ~70 tools voltadas a analistas de licitação.
+do Comprasnet Contratos) em 100 tools voltadas a analistas de licitação.
 
 ## Framework
 
@@ -50,6 +50,21 @@ Sempre passar pelo `with_latency(payload, started)` antes do return.
   `comprasnet` (YYYY-MM-DD HH:mm:ss).
 - Subclasses específicas por API. Factories em `tools/_helpers.py`:
   `make_dados_abertos(s)`, `make_pncp(s)`, `make_transparencia(s)`, `make_comprasnet(s)`.
+
+## Contrato de query (o defeito que mais se repete aqui)
+
+`dadosabertos.compras.gov.br` responde **HTTP 200 a qualquer parâmetro de
+query desconhecido** e devolve o resultado como se nenhum filtro tivesse sido
+pedido. Nome errado de parâmetro é, portanto, indistinguível de filtro
+funcionando — foi assim que 7 filtros passaram meses sem filtrar nada
+(v0.3.17). Ao sondar um filtro novo, mande junto um parâmetro inventado
+(`zzzControle=1`) como controle: se o total não mudar em relação a ele, o
+filtro está sendo ignorado.
+
+Toda chave e todo valor de enum enviados são travados contra o OpenAPI oficial
+em `tests/test_contrato_upstream.py` (snapshot em
+`tests/fixtures/dadosabertos_openapi_params.json`). Para regenerar o snapshot
+depois de uma mudança upstream, veja `_como_regerar` no próprio fixture.
 
 ## Cache
 

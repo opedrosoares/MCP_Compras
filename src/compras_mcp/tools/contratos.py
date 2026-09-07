@@ -38,7 +38,10 @@ from compras_mcp.cache import cache_from_env
 from compras_mcp.clients.base import format_date
 from compras_mcp.config import get_settings
 from compras_mcp.mcp_instance import SOMENTE_LEITURA, mcp
-from compras_mcp.schemas import ListarPaginadoInput
+from compras_mcp.schemas import (
+    ConsultarContratoItemInput,
+    ListarPaginadoInput,
+)
 from compras_mcp.tools._helpers import (
     desc,
     envelope_comprasnet,
@@ -359,6 +362,58 @@ async def compras_contratos_itens_listar(
             pagina=pagina,
             tamanho_pagina=tamanho_pagina,
             **filtros,
+        )
+    payload = envelope_dados_abertos(resp, pagina_atual=pagina)
+    payload["_cache_hit"] = False
+    await _contratos_cache.set(key, json.loads(json.dumps(payload, default=str)))
+    return with_latency(payload, started)
+
+
+@mcp.tool(annotations=SOMENTE_LEITURA)
+async def compras_contratos_item_consultar(
+    codigo: Annotated[str, Field(description=desc(ConsultarContratoItemInput, "codigo"))],
+    tipo_identificador: Annotated[
+        Literal["idCompra", "numeroControlePncpContrato"],
+        Field(description=desc(ConsultarContratoItemInput, "tipo_identificador")),
+    ] = "idCompra",
+    pagina: Annotated[int, Field(description=desc(ListarPaginadoInput, "pagina"))] = 1,
+    tamanho_pagina: Annotated[
+        int, Field(description=desc(ListarPaginadoInput, "tamanho_pagina"))
+    ] = 50,
+) -> dict[str, Any]:
+    """Lista os itens de um contrato específico, pelo identificador.
+
+    Endpoint `/modulo-contratos/2.1_consultarContratosItem_Id`.
+
+    Use quando você já tem o contrato em mãos e quer só os itens dele.
+    `compras_contratos_itens_listar` exige órgão mais janela de vigência e
+    devolve os itens de todos os contratos do recorte — chegar a um contrato
+    específico por ali significa paginar centenas de linhas irrelevantes.
+
+    O `codigo` aceita o `idCompra` numérico (padrão) ou o número de controle
+    PNCP do contrato, conforme `tipo_identificador`. Qualquer outro valor de
+    tipo faz o upstream devolver HTTP 500.
+
+    **Atenção ao somar valores**: pode haver mais de uma linha por item, uma
+    por versão/alteração contratual. Confira o campo de exclusão antes de
+    agregar.
+
+    Cache 15 min.
+    """
+    started = time.perf_counter()
+    key = _ck("contratos_item_consultar", tipo_identificador, codigo, pagina, tamanho_pagina)
+    cached = await _contratos_cache.get(key)
+    if cached is not None:
+        cached["_cache_hit"] = True
+        return with_latency(cached, started)
+
+    async with make_dados_abertos(get_settings()) as client:
+        resp = await client.list_resource(
+            "/modulo-contratos/2.1_consultarContratosItem_Id",
+            pagina=pagina,
+            tamanho_pagina=tamanho_pagina,
+            tipo=tipo_identificador,
+            codigo=codigo,
         )
     payload = envelope_dados_abertos(resp, pagina_atual=pagina)
     payload["_cache_hit"] = False

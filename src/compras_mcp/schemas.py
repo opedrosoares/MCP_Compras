@@ -95,6 +95,29 @@ class ConsultarCatserInput(BaseModel):
     )
 
 
+class ListarPdmMaterialInput(BaseModel):
+    """Filtros de `/modulo-material/3_consultarPdmMaterial`."""
+
+    codigo_grupo: int | None = Field(
+        default=None,
+        description="Código do grupo CATMAT (2 dígitos) para listar seus PDMs.",
+    )
+    codigo_classe: int | None = Field(
+        default=None,
+        description=(
+            "Código da classe CATMAT (4 dígitos). É o recorte mais útil: uma "
+            "classe devolve suas dezenas de PDMs em uma única chamada."
+        ),
+    )
+    codigo_pdm: int | None = Field(
+        default=None, description="Código de um PDM específico."
+    )
+    apenas_ativos: bool | None = Field(
+        default=None,
+        description="Se `true`, só PDMs com status ativo no catálogo.",
+    )
+
+
 class BuscarItemCatalogoInput(BaseModel):
     termo: str = Field(
         min_length=2,
@@ -241,15 +264,273 @@ class ListarContratacoes14133Input(BaseModel):
             "6=Pregão Eletrônico, 8=Dispensa, 5=Concorrência, 9=Inexigibilidade."
         ),
     )
+    codigo_orgao_pncp: int | None = Field(
+        default=None,
+        description=(
+            "Código do órgão **no espaço de códigos interno do PNCP** — é o "
+            "campo `codigoOrgao` que vem no payload desta mesma tool, e só ele. "
+            "**Não é o código SIASG** de `compras_orgao_listar`/"
+            "`compras_orgao_consultar`: os dois espaços não coincidem (a UFSC é "
+            "26246 no SIASG e 86135 aqui) e passar o código SIASG devolve zero "
+            "registros ou, quando o número existe nos dois, as contratações de "
+            "OUTRO órgão. Para recortar por órgão partindo do que você conhece, "
+            "use `cnpj_orgao` (CNPJ) ou `codigo_uasg`."
+        ),
+    )
+    uf: str | None = Field(
+        default=None,
+        description="Sigla da UF da unidade compradora (2 letras, ex.: 'SP', 'MS').",
+    )
+    codigo_ibge_municipio: int | None = Field(
+        default=None,
+        description="Código IBGE do município da unidade compradora (7 dígitos).",
+    )
+    amparo_legal: int | None = Field(
+        default=None,
+        description=(
+            "Código do amparo legal no PNCP (campo `amparoLegalCodigoPncp`). "
+            "Ex.: 18 = Lei 14.133/2021, Art. 75, I (dispensa por valor)."
+        ),
+    )
     pagina: int = Field(default=1, ge=1, description="Página (1-based).")
     tamanho_pagina: int = Field(
         default=50, ge=1, le=500, description="Registros por página."
     )
 
 
+class ListarItensContratacoes14133Input(BaseModel):
+    """Filtros de `/modulo-contratacoes/2_consultarItensContratacoes_PNCP_14133`."""
+
+    data_inicial_inclusao: date = Field(
+        description="Data inicial de inclusão dos itens no PNCP (YYYY-MM-DD).",
+    )
+    data_final_inclusao: date = Field(
+        description="Data final de inclusão dos itens no PNCP (YYYY-MM-DD).",
+    )
+    cod_item_catalogo: int | None = Field(
+        default=None,
+        description=(
+            "Código do item no catálogo (CATMAT para material, CATSER para "
+            "serviço). É o filtro que transforma esta tool em pesquisa de preço: "
+            "devolve, na mesma linha, quantidade, valor unitário estimado e "
+            "valor unitário homologado do item."
+        ),
+    )
+    material_ou_servico: str | None = Field(
+        default=None,
+        description="'M' para material, 'S' para serviço.",
+    )
+    codigo_grupo: int | None = Field(
+        default=None,
+        description=(
+            "Código do grupo do catálogo. Recorte por família quando o código "
+            "exato do item ainda não é conhecido."
+        ),
+    )
+    codigo_classe: int | None = Field(
+        default=None,
+        description=(
+            "Código da classe do catálogo. Vem nulo em boa parte dos serviços — "
+            "nesses casos use `codigo_grupo`."
+        ),
+    )
+    tem_resultado: bool | None = Field(
+        default=None,
+        description=(
+            "Se `true`, só itens que tiveram vencedor — filtro aplicado pelo "
+            "upstream. Use para pesquisa de preço: item deserto ou fracassado "
+            "não é preço praticado e não pode entrar na média do ETP. Se "
+            "`false`, o recorte é feito aqui, client-side, sobre a página "
+            "trazida: o upstream grava `temResultado: null` (não `false`) nos "
+            "itens sem vencedor, então mandar `temResultado=false` para ele "
+            "devolveria zero registros sempre."
+        ),
+    )
+    situacao_item: str | None = Field(
+        default=None,
+        description=(
+            "Situação do item da compra. '2' = Homologado, '4' = Cancelado. "
+            "Filtre por '2' antes de calcular qualquer estatística de preço."
+        ),
+    )
+    cnpj_orgao: str | None = Field(
+        default=None,
+        description="CNPJ do órgão comprador (14 dígitos, com ou sem pontuação).",
+    )
+    codigo_uasg: int | None = Field(
+        default=None, description="Código da UASG compradora (6 dígitos)."
+    )
+    cnpj_cpf_fornecedor: str | None = Field(
+        default=None,
+        description="CNPJ ou CPF do fornecedor vencedor do item (só dígitos).",
+    )
+
+
+class ListarResultadosContratacoes14133Input(BaseModel):
+    """Filtros de `/modulo-contratacoes/3_consultarResultadoItensContratacoes...`."""
+
+    data_inicial_resultado: date = Field(
+        description="Data inicial do resultado/homologação (YYYY-MM-DD).",
+    )
+    data_final_resultado: date = Field(
+        description="Data final do resultado/homologação (YYYY-MM-DD).",
+    )
+    ni_fornecedor: str | None = Field(
+        default=None,
+        description=(
+            "Número de identificação do fornecedor vencedor (CNPJ ou CPF, só "
+            "dígitos). Use para levantar tudo que um fornecedor ganhou no período."
+        ),
+    )
+    porte_fornecedor: int | None = Field(
+        default=None,
+        description=(
+            "Código do porte do fornecedor (ex.: 1=ME, 2=EPP, 3=Demais). "
+            "Preenchimento irregular na origem — trate ausência como desconhecido."
+        ),
+    )
+    situacao_resultado: int | None = Field(
+        default=None,
+        description=(
+            "Código da situação do resultado. 1 = Informado. Use para descartar "
+            "resultado cancelado antes de calcular média ou mediana de preço."
+        ),
+    )
+    valor_unitario_min: float | None = Field(
+        default=None, description="Valor unitário homologado mínimo (R$)."
+    )
+    valor_unitario_max: float | None = Field(
+        default=None, description="Valor unitário homologado máximo (R$)."
+    )
+    valor_total_min: float | None = Field(
+        default=None,
+        description=(
+            "Valor total homologado mínimo (R$). Combinado com a janela de datas, "
+            "monta fila de auditoria por materialidade."
+        ),
+    )
+    valor_total_max: float | None = Field(
+        default=None, description="Valor total homologado máximo (R$)."
+    )
+    cnpj_orgao: str | None = Field(
+        default=None,
+        description="CNPJ do órgão comprador (14 dígitos, com ou sem pontuação).",
+    )
+    codigo_uasg: int | None = Field(
+        default=None, description="Código da UASG compradora (6 dígitos)."
+    )
+
+
+class ListarItensPregaoLegadoInput(BaseModel):
+    """Filtros de `/modulo-legado/4_consultarItensPregoes` (Lei 8.666).
+
+    Com `id_compra` a consulta é redirecionada para a variante `4.1`, que busca
+    os itens de um pregão específico e dispensa a janela de homologação.
+    """
+
+    data_homologacao_inicial: date | None = Field(
+        default=None,
+        description=(
+            "Data inicial de homologação dos itens (YYYY-MM-DD). Obrigatória "
+            "quando `id_compra` não é informado."
+        ),
+    )
+    data_homologacao_final: date | None = Field(
+        default=None,
+        description=(
+            "Data final de homologação dos itens (YYYY-MM-DD). Obrigatória "
+            "quando `id_compra` não é informado."
+        ),
+    )
+    id_compra: str | None = Field(
+        default=None,
+        description=(
+            "Identificador do pregão, para trazer só os itens dele. É a "
+            "concatenação zero-padded de UASG(6) + modalidade(2) + número(5) + "
+            "ano(4) — ex.: '38916105000152022'. Também é o campo `id_compra` "
+            "devolvido por `compras_legado_pregoes_listar`."
+        ),
+    )
+    id_compra_item: str | None = Field(
+        default=None,
+        description="Identificador de um item específico dentro do pregão.",
+    )
+    codigo_uasg: int | None = Field(
+        default=None,
+        description="Código da UASG que realizou o pregão (só na busca por período).",
+    )
+    decreto_7174: str | None = Field(
+        default=None,
+        description=(
+            "Filtra itens sujeitos ao Decreto 7.174/2010 (bens e serviços de "
+            "informática)."
+        ),
+    )
+
+
+class ListarItensSemLicitacaoLegadoInput(BaseModel):
+    """Filtros de `/modulo-legado/6_consultarCompraItensSemLicitacao`.
+
+    Com `id_compra` a consulta é redirecionada para a variante `6.1`, que busca
+    os itens de uma compra específica e dispensa o ano do aviso.
+    """
+
+    ano_aviso: int | None = Field(
+        default=None,
+        description=(
+            "Ano do aviso da contratação direta. Obrigatório quando `id_compra` "
+            "não é informado. Cobertura útil principalmente entre 2019 e 2021, "
+            "período anterior ao PNCP — para 2022 em diante prefira "
+            "`compras_contratacoes_14133_itens_listar`."
+        ),
+    )
+    id_compra: str | None = Field(
+        default=None,
+        description="Identificador da compra, para trazer só os itens dela.",
+    )
+    id_compra_item: str | None = Field(
+        default=None,
+        description="Identificador de um item específico dentro da compra.",
+    )
+    codigo_uasg: int | None = Field(
+        default=None, description="Código da UASG contratante."
+    )
+    codigo_orgao: str | None = Field(
+        default=None, description="Código do órgão contratante."
+    )
+    codigo_modalidade: int | None = Field(
+        default=None,
+        description="Código da modalidade legada (dispensa, inexigibilidade).",
+    )
+    codigo_conjunto_materiais: int | None = Field(
+        default=None, description="Código do conjunto de materiais (CATMAT legado)."
+    )
+    codigo_servico: int | None = Field(
+        default=None, description="Código do serviço (CATSER legado)."
+    )
+    cpf_cnpj_fornecedor: str | None = Field(
+        default=None,
+        description="CPF ou CNPJ do fornecedor vencedor (só dígitos).",
+    )
+
+
 class ConsultarContratacao14133Input(BaseModel):
-    id_contratacao: int = Field(
-        description="Identificador interno da contratação (campo `id` retornado em listar_contratacoes_14133).",
+    id_contratacao: str = Field(
+        description=(
+            "Identificador da contratação. Aceita dois formatos, conforme "
+            "`tipo_identificador`: o `idCompra` (17 dígitos, campo `idCompra` das "
+            "listagens, ex.: '15813206001272025') ou o número de controle PNCP "
+            "(alfanumérico com barra, campo `numeroControlePNCP`, ex.: "
+            "'10673078000120-1-000021/2025' — é o número que aparece no edital)."
+        ),
+    )
+    tipo_identificador: str = Field(
+        default="idCompra",
+        description=(
+            "Qual identificador está sendo passado em `id_contratacao`: "
+            "'idCompra' (padrão) ou 'numeroControlePNCPCompra'. O upstream "
+            "rejeita qualquer outro valor com HTTP 500."
+        ),
     )
 
 
@@ -326,6 +607,24 @@ class ListarContratosInput(BaseModel):
     pagina: int = Field(default=1, ge=1, description="Página (1-based).")
     tamanho_pagina: int = Field(
         default=50, ge=1, le=500, description="Registros por página."
+    )
+
+
+class ConsultarContratoItemInput(BaseModel):
+    """Filtros de `/modulo-contratos/2.1_consultarContratosItem_Id`."""
+
+    codigo: str = Field(
+        description=(
+            "Identificador do contrato: o `idCompra` numérico ou o número de "
+            "controle PNCP do contrato, conforme `tipo_identificador`."
+        ),
+    )
+    tipo_identificador: str = Field(
+        default="idCompra",
+        description=(
+            "Qual identificador está em `codigo`: 'idCompra' (padrão) ou "
+            "'numeroControlePncpContrato'. Outro valor devolve HTTP 500."
+        ),
     )
 
 

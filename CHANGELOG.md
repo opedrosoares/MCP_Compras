@@ -4,6 +4,150 @@ Todas as mudanças notáveis. Cada release foi descoberto em bateria E2E
 real contra o servidor em produção (Railway + Redis) e validado por
 probe direto ao upstream antes do fix.
 
+## [0.3.17] — 2026-09-07
+
+Análise da notícia da SEGES/MGI de 26/07/2024 ("quatro novos serviços de
+consulta em formato de API", módulo 7 — Contratações). **As seis rotas do
+módulo já estavam cobertas** desde a v0.2 — nenhum endpoint novo era
+necessário por causa dela. O que a sondagem achou foi pior: a cobertura era
+formal, não material.
+
+Esta API responde **HTTP 200 a qualquer parâmetro de query desconhecido**, e
+devolve o resultado como se nenhum filtro tivesse sido pedido. Usando um
+parâmetro inventado como controle (`zzzControle=1`), dá para separar "o filtro
+funciona" de "o filtro foi ignorado" — e sete filtros do MCP estavam do lado
+errado dessa linha. O analista pedia "contratações da UASG 158132" e recebia a
+janela inteira do Brasil, sem aviso nenhum.
+
+### Fixed
+
+- **`compras_contratacoes_14133_listar`**: `codigo_uasg` e `cnpj_orgao` iam no
+  fio como `codigoUasg`/`cnpjOrgao`, nomes que a rota não declara. Medido na
+  janela 2025-03-03..05 (modalidade 6): 20 registros com o filtro, 20 sem ele,
+  20 com o parâmetro de controle. Os nomes do contrato são
+  `unidadeOrgaoCodigoUnidade` e `orgaoEntidadeCnpj` — com eles, 1 registro.
+- **`compras_contratacoes_14133_consultar`, `_itens_por_contratacao` e
+  `_resultados_por_contratacao`**: mandavam `tipo=C`, fora do enum
+  `[idCompra, numeroControlePNCPCompra]`. **100% das chamadas devolviam HTTP
+  500** ("Failed to convert ... EnumContratacoes ... for value [C]"). O
+  `upstream_registry` já usava o valor certo — o probe passava verde enquanto
+  as tools quebravam, porque nada comparava os dois.
+- **`compras_pgc_por_catalogo`**: mesmo defeito, outro enum — mandava
+  `tipo=M`/`S` contra `[Material, Servico]`, **HTTP 500 em toda chamada**. A
+  interface `M`/`S` continua; a tradução passou a ser feita na tool.
+- **`compras_buscar_contratacoes_similares`**: a perna Dados Abertos mandava
+  `codigoItemCatalogo` para a rota de resultados (`/3_`), que não declara
+  filtro por item de catálogo — o consolidado recebia contratações sem
+  qualquer relação com o CATMAT pedido, rotuladas como "similares". Migrada
+  para a rota de itens (`/2_`), onde o filtro existe com o nome
+  `codItemCatalogo` (103 → 1 registro na janela medida) e o mesmo registro já
+  traz fornecedor e valor homologado. De quebra, `codigo_catser` deixou de
+  sobrescrever `codigo_catmat` (mesma chave no dict) e a deduplicação parou de
+  colapsar todos os itens do Dados Abertos num só (a chave composta virava
+  `"--"` para registros que não têm CNPJ/ano/sequencial).
+- **`compras_catmat_buscar`**: mandava `descricao`, nome que não existe no
+  contrato — devolvia os 344.788 itens do catálogo com aparência de busca. A
+  docstring atribuía isso a um bug da SEGES; o bug era nosso. **Renomear não
+  resolve**: o campo declarado é `descricaoItem` e é match exato
+  (`descricaoItem=CADEIRA` → 0 registros, mesmo com "CADEIRA ESCRITÓRIO..." na
+  primeira página do universo). O termo agora não é enviado, o recorte vem dos
+  códigos estruturais e o aviso descreve a limitação real.
+- **`compras_uasg_listar(codigo_orgao=...)`**: `codigoOrgao` não consta do
+  contrato de `/modulo-uasg/1` — devolvia as 22.052 UASGs do país. Agora a
+  tool resolve o código para o CNPJ do órgão em `/modulo-uasg/2` e filtra por
+  `cnpjCpfOrgao` (órgão 26246/UFSC → 3 UASGs).
+- **`compras_orgao_listar`**: `nome`, `esfera` e `poder` também eram enviados e
+  ignorados (11.957 órgãos com e sem filtro). Passaram a ser aplicados
+  client-side sobre a página trazida, com `_filtro_client_side` no payload
+  dizendo quantos sobraram — em vez de só um aviso na docstring.
+
+### Added
+
+- **`compras_catmat_listar_pdms`**: fecha a hierarquia grupo → classe → **PDM**
+  do CATMAT. Classe 7110 devolve 98 PDMs numa chamada, contra varrer 5.294
+  itens para deduplicar `codigoPdm` na mão.
+- **`compras_legado_itens_pregao_listar`**: única fonte da cadeia estimado →
+  menor lance → valor homologado **por item** nos pregões da Lei 8.666, e dos
+  itens desertos/fracassados. Busca por janela de homologação ou por pregão.
+- **`compras_legado_itens_sem_licitacao_listar`**: itens de contratação direta
+  no período pré-PNCP (2019–2021), por ano do aviso ou por compra. Passa por
+  `apply_lgpd` — o payload traz `nu_cpf_vencedor`.
+- **`compras_contratos_item_consultar`**: itens de um contrato específico, por
+  `idCompra` ou número de controle PNCP.
+- **Filtros que existiam no contrato e não estavam expostos**:
+  `codigo_orgao_pncp`, `uf`, `codigo_ibge_municipio` e `amparo_legal` em
+  `compras_contratacoes_14133_listar`; `cod_item_catalogo`,
+  `material_ou_servico`, `codigo_grupo`, `codigo_classe`, `tem_resultado`,
+  `situacao_item`, `cnpj_orgao`, `codigo_uasg` e `cnpj_cpf_fornecedor` em
+  `_itens_listar`; `ni_fornecedor`, `porte_fornecedor`, `situacao_resultado`,
+  as faixas de valor unitário/total homologado, `cnpj_orgao` e `codigo_uasg` em
+  `_resultados_listar`. Juntos transformam a tool de itens em pesquisa de preço
+  por CATMAT (estimado vs. homologado) e permitem fila de auditoria por
+  materialidade.
+- **`tipo_identificador` nas tools de consulta por id** (`idCompra` ou
+  `numeroControlePNCPCompra`), com `id_contratacao` aceitando `str` — antes era
+  `int` e não dava para colar o número de controle do edital
+  (`10673078000120-1-000021/2025`).
+
+### Armadilhas que ficaram documentadas em vez de escondidas
+
+Uma revisão adversarial antes do release pegou defeitos que a suíte verde não
+via — todos verificados ao vivo contra o upstream:
+
+- **`codigo_orgao_pncp` (nome novo, e o nome importa)**: o `codigoOrgao` de
+  `/modulo-contratacoes/1_` é do espaço de códigos interno do PNCP, **não** do
+  SIASG que o resto do MCP usa. A UFSC é 26246 no SIASG e 86135 ali; passar
+  26246 devolve zero registros em silêncio, e 86135 consultado no SIASG é
+  outro órgão (EPI-INSTITUTO/PI). O parâmetro carrega o espaço no nome, a
+  description avisa, e resultado vazio com esse filtro passou a vir com
+  `_aviso_filtro` apontando `cnpj_orgao`/`codigo_uasg`. A recomendação em
+  `compras_orgao_listar`, que mandava usar o código SIASG ali, foi corrigida.
+- **`tem_resultado=False`**: o upstream grava `temResultado: null` nos itens
+  sem vencedor e só sabe filtrar por `true` — `false` devolvia zero sempre
+  (janela 2025-01-06..07: 5018 itens, 4089 com resultado, 0 com
+  `temResultado=false`). O ramo `false` passou a ser aplicado client-side, com
+  `_filtro_client_side` no payload.
+- **`compras_uasg_listar(codigo_orgao=...)`**: o salto para `cnpjCpfOrgao`
+  precisava de duas ressalvas. CNPJ não identifica órgão (599 dos 11.957
+  órgãos ativos compartilham CNPJ; o CNPJ da Polícia Federal devolvia 110
+  UASGs, só 8 do órgão pedido) — agora o resultado é reduzido pelo
+  `codigoOrgao` de cada UASG. E 39 órgãos não têm CNPJ próprio (o upstream
+  grava `"0"`), o que devolvia 15 UASGs alheias com cara de recorte preciso —
+  agora devolve vazio com aviso.
+- **Tools legado com `id_compra`**: a rota por id ignora os demais recortes;
+  agora o payload diz quais argumentos não tiveram efeito, em vez de entregar
+  lista completa com aparência de lista filtrada.
+- **`manifest.json`** anunciava "96 tools" no `description` — o texto que o
+  Claude Desktop mostra ao instalar o `.mcpb` — com 100 registradas.
+
+### Testing
+
+- **Teste de contrato contra o OpenAPI oficial**
+  (`tests/test_contrato_upstream.py`): exercita cada tool com todos os
+  parâmetros preenchidos, intercepta o que sai no fio e confere contra
+  `tests/fixtures/dadosabertos_openapi_params.json` — chave declarada, valor
+  dentro do enum, obrigatório presente. Reintroduzir qualquer um dos sete
+  defeitos acima faz o teste falhar (verificado por mutação). É o que faltava:
+  sem ele, nome errado de parâmetro é indistinguível de filtro funcionando,
+  porque o upstream responde 200 aos dois. `pagina`/`tamanhoPagina` ficam de
+  fora da checagem — o contrato os declara de forma irregular e, onde não
+  constam, são ignorados sem custo de filtro.
+- O mesmo módulo agora valida o `upstream_registry` contra o contrato, e traz
+  um alarme de drift do snapshot (`COMPRAS_LIVE_TESTS=1`).
+- **`manifest.json` vs. registro** (`tests/test_tools_registry.py`): o manifest
+  é mantido à mão e nada o comparava com as tools registradas — as quatro tools
+  novas teriam ficado de fora sem nenhum teste cair. Versão do manifest também
+  passou a ser travada contra `__version__`.
+- Cobertura SSoT de descriptions estendida às tools de `contratacoes.py`
+  (nenhuma era coberta — por isso o drift passou), mais as quatro novas.
+- A varredura de contrato passou a exercitar **todo valor de enum** e os
+  **ramos mutuamente exclusivos** das tools que trocam de rota conforme o
+  argumento (por id x por período), e a cobrar a lista de rotas que precisam
+  ter sido visitadas. Sem isso ela dava por conferidas rotas em que nunca
+  encostou: as duas mutações correspondentes passavam com a suíte verde.
+- O `description` do manifest (a contagem que o .mcpb anuncia) passou a ser
+  comparado com o número de tools registradas.
+
 ## [0.3.16] — 2026-09-07
 
 Primeira contribuição externa incorporada (PR #1, por

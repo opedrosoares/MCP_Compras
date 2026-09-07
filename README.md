@@ -7,7 +7,7 @@
 
 Servidor MCP que reúne em um único pacote as APIs públicas do ecossistema **Compras.gov.br**, voltado a analistas e técnicos das áreas de **planejamento de contratação** e **execução contratual**.
 
-**96 tools + 6 prompts + 6 resources** cobrindo Dados Abertos, PNCP, Portal da Transparência/CGU, Comprasnet Contratos e BrasilAPI/Receita.
+**100 tools + 6 prompts + 6 resources** cobrindo Dados Abertos, PNCP, Portal da Transparência/CGU, Comprasnet Contratos e BrasilAPI/Receita.
 
 Apoia a elaboração de:
 
@@ -293,19 +293,19 @@ railway up
 
 Nenhuma dependência de sistema além do Python — diferente de MCPs que fazem OCR/scraping, este servidor só consome APIs REST públicas.
 
-## Tools (96 no total)
+## Tools (100 no total)
 
 Agrupadas por domínio funcional:
 
 | Domínio | Tools | Cobertura |
 |---------|-------|-----------|
 | **Compostas (agente)** | 5 | `pesquisar_precos_para_etp` (IN SEGES 65/2021 com IQR), `checar_sancoes_fornecedor`, `montar_dossie_arp`, `buscar_contratacoes_similares`, `perfil_fornecedor_completo` |
-| **Catálogo** (CATMAT/CATSER) | 7 | Grupos/classes/itens, busca textual (com limitação upstream, ver aviso) |
+| **Catálogo** (CATMAT/CATSER) | 8 | Grupos/classes/**PDMs**/itens; a API não busca por substring, então a navegação é hierárquica (ver aviso) |
 | **Pesquisa de preço** | 4 | Material/serviço, detalhe por compra |
 | **Planejamento** (PGC + PCA) | 8 | PGC SISG, PCA PNCP (federal + estados + municípios) |
 | **Atas de Registro de Preço** | 9 | Listar, buscar por objeto, saldo, adesões, unidades participantes, PNCP |
-| **Contratações** (14.133 + legado) | 12 | Lei 14.133, Lei 8.666, RDC, dispensas |
-| **Contratos** | 14 | Dados Abertos + Comprasnet (garantias, faturas, ocorrências, fiscais, empenhos, cronograma, publicações) |
+| **Contratações** (14.133 + legado) | 14 | Lei 14.133 (filtros por UASG, CNPJ do órgão, UF, município, amparo legal, item de catálogo, fornecedor e faixa de valor homologado), Lei 8.666 **por item** (estimado → menor lance → homologado), RDC, dispensas |
+| **Contratos** | 15 | Dados Abertos (contrato e itens do contrato) + Comprasnet (garantias, faturas, ocorrências, fiscais, empenhos, cronograma, publicações) |
 | **Fornecedores** | 4 | Cadastro, impedimentos, contratos por item |
 | **Sanções** (Transparência/CGU) | 5 | CEIS, CNEP, CEPIM, CEAF, acordos de leniência |
 | **PNCP** | 11 | Contratações (publicação, proposta, atualização), contratos, modalidades, **arquivos de contratação e de ata** (Edital/TR/ETP e aditivos, com URL de download) |
@@ -408,7 +408,7 @@ MIT — veja [LICENSE](LICENSE).
 
 ## Status
 
-v0.3.16 — 96 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
+v0.3.17 — 100 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
 
 <!-- Prova de propriedade do MCP Registry oficial: o validador procura este
      token na long_description publicada no PyPI. Não remover. -->

@@ -32,7 +32,10 @@ Os testes de campo rodam em dois modos:
 
 from __future__ import annotations
 
+import contextlib
+import json
 import os
+import pathlib
 import re
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -667,3 +670,364 @@ async def test_pncp_400_continua_sendo_400(httpx_mock: HTTPXMock) -> None:
     erro = payload["_erro_upstream"]
     assert erro["status"] == 400
     assert "rejeitou os parâmetros" in erro["diagnostico"]
+
+
+# ===========================================================================
+# 5. Contrato contra o OpenAPI oficial — o que teria pego os 4 defeitos de
+#    2026-09 (parâmetro fora do contrato ignorado em silêncio)
+# ===========================================================================
+#
+# `dadosabertos.compras.gov.br` responde HTTP 200 a QUALQUER chave de query
+# desconhecida — e devolve o resultado como se nenhum filtro tivesse sido
+# pedido. Não há 400, não há aviso: `codigoUasg=158132` (nome inexistente)
+# devolve a janela inteira do Brasil, exatamente igual a `parametroInventado=1`.
+#
+# Foi assim que quatro tools passaram meses filtrando nada:
+#   - `..._14133_listar` mandava `codigoUasg`/`cnpjOrgao`; o contrato declara
+#     `unidadeOrgaoCodigoUnidade`/`orgaoEntidadeCnpj`.
+#   - `compras_buscar_contratacoes_similares` mandava `codigoItemCatalogo` para
+#     a rota de resultados, que não declara filtro por item de catálogo.
+#   - `compras_catmat_buscar` mandava `descricao`; o contrato declara
+#     `descricaoItem`.
+#   - as três tools de consulta por id mandavam `tipo=C`, fora do enum
+#     `[idCompra, numeroControlePNCPCompra]` (essa dava HTTP 500, não 200).
+#
+# O teste abaixo exercita cada tool com argumentos sintéticos preenchendo TODOS
+# os parâmetros, intercepta o que sai no fio e confere contra o contrato:
+# chave declarada, valor dentro do enum, obrigatório presente.
+
+_URL_DADOS_ABERTOS = "https://dadosabertos.compras.gov.br"
+_FIXTURE_OPENAPI = (
+    pathlib.Path(__file__).parent / "fixtures" / "dadosabertos_openapi_params.json"
+)
+
+# Tools cuja quebra de contrato é o motivo deste teste existir. Se alguma
+# parar de ser exercitada (renomeada, sem chamada HTTP), falha aqui em vez de
+# passar a coberta em silêncio.
+TOOLS_CRITICAS_DADOS_ABERTOS = (
+    "compras_contratacoes_14133_listar",
+    "compras_contratacoes_14133_consultar",
+    "compras_contratacoes_14133_itens_listar",
+    "compras_contratacoes_14133_itens_por_contratacao",
+    "compras_contratacoes_14133_resultados_listar",
+    "compras_contratacoes_14133_resultados_por_contratacao",
+    "compras_catmat_buscar",
+    "compras_catmat_listar_pdms",
+    "compras_legado_itens_pregao_listar",
+    "compras_legado_itens_sem_licitacao_listar",
+    "compras_contratos_item_consultar",
+    "compras_buscar_contratacoes_similares",
+    "compras_pgc_por_catalogo",
+    "compras_uasg_listar",
+    "compras_orgao_listar",
+)
+
+# Rotas que a varredura precisa ter batido de fato. Sem isto, uma tool que
+# despacha para duas rotas (por id x por período) passava como "exercitada"
+# tendo visitado só uma delas — e a outra, que é a registrada no healthcheck,
+# nunca era conferida.
+PATHS_QUE_PRECISAM_SER_VISITADOS = (
+    "/modulo-legado/4_consultarItensPregoes",
+    "/modulo-legado/6_consultarCompraItensSemLicitacao",
+    "/modulo-contratacoes/1_consultarContratacoes_PNCP_14133",
+    "/modulo-contratacoes/2_consultarItensContratacoes_PNCP_14133",
+    "/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133",
+    "/modulo-material/3_consultarPdmMaterial",
+    "/modulo-material/4_consultarItemMaterial",
+    "/modulo-contratos/2.1_consultarContratosItem_Id",
+    "/modulo-pgc/2_consultarPgcDetalheCatalogo",
+    "/modulo-uasg/1_consultarUasg",
+)
+
+# Tools que escolhem a rota conforme o argumento informado. Preenchendo TODOS
+# os parâmetros, a varredura só veria o ramo por id; estes conjuntos removem os
+# argumentos do ramo dominante para que o outro também chegue ao fio.
+RAMOS_EXCLUSIVOS: dict[str, tuple[tuple[str, ...], ...]] = {
+    "compras_legado_itens_pregao_listar": (("id_compra", "id_compra_item"),),
+    "compras_legado_itens_sem_licitacao_listar": (("id_compra", "id_compra_item"),),
+}
+
+# Valores sintéticos por nome de parâmetro da tool (não do upstream). O que
+# importa é a chave que sai no fio, não o valor — mas o valor precisa passar
+# pela validação do Pydantic e pelas normalizações das tools (CNPJ, UF, datas).
+_VALORES_SINTETICOS: dict[str, Any] = {
+    "termo": "cadeira",
+    "uf": "SP",
+    "sigla_uf": "SP",
+    "cnpj": "10673078000120",
+    "cnpj_orgao": "10673078000120",
+    "cnpj_fornecedor": "10673078000120",
+    "cnpj_cpf_fornecedor": "10673078000120",
+    "cpf_cnpj_fornecedor": "10673078000120",
+    "ni_fornecedor": "10673078000120",
+    "codigo_ibge_municipio": 3550308,
+    "id_compra": "15813206001272025",
+    "id_compra_item": "158132060012720251",
+    "id_contratacao": "15813206001272025",
+    "codigo": "15813206001272025",
+    "numero_controle_pncp": "10673078000120-1-000021/2025",
+    "sequencial": 2101,
+    "ano": 2024,
+    "ano_aviso": 2020,
+    "ano_compra": 2024,
+    "max_paginas": 1,
+    "tamanho_pagina": 10,
+}
+
+
+def _valores_de_data(nome: str) -> str:
+    """Janela curta e válida; `final` depois de `inicial` para não tropeçar
+    em validação de intervalo."""
+    return "2025-03-05" if ("final" in nome or "fim" in nome) else "2025-03-03"
+
+
+def _ramo_util(schema: dict[str, Any]) -> dict[str, Any]:
+    """Descarta o ramo `null` do `anyOf` que o Optional gera."""
+    if "anyOf" in schema:
+        for ramo in schema["anyOf"]:
+            if ramo.get("type") != "null":
+                return ramo
+    return schema
+
+
+def _valor_sintetico(nome: str, schema: dict[str, Any]) -> Any:
+    ramo = _ramo_util(schema)
+    enum = schema.get("enum") or ramo.get("enum")
+    if enum:
+        return enum[0]
+    if nome in _VALORES_SINTETICOS:
+        return _VALORES_SINTETICOS[nome]
+    tipo = ramo.get("type")
+    if tipo == "string":
+        if ramo.get("format") == "date":
+            return _valores_de_data(nome)
+        return "1"
+    if tipo == "integer":
+        return 1
+    if tipo == "number":
+        return 1.0
+    if tipo == "boolean":
+        return True
+    if tipo == "array":
+        return []
+    return "1"
+
+
+def _args_sinteticos(parametros: Any) -> dict[str, Any]:
+    if not isinstance(parametros, dict):
+        return {}
+    props = parametros.get("properties") or {}
+    return {
+        nome: _valor_sintetico(nome, schema)
+        for nome, schema in props.items()
+        if isinstance(schema, dict)
+    }
+
+
+def _conjuntos_de_args(nome_tool: str, parametros: Any) -> list[dict[str, Any]]:
+    """Argumentos a exercitar para uma tool: o caso cheio, um por valor de enum
+    e um por ramo mutuamente exclusivo.
+
+    Testar só `enum[0]` deixa passar tradução quebrada no outro ramo — é
+    exatamente o caso de `tipo='M'|'S'` em `compras_pgc_por_catalogo`, onde só
+    o ramo de material chegaria ao upstream.
+    """
+    base = _args_sinteticos(parametros)
+    conjuntos = [base]
+    props = (parametros or {}).get("properties") or {}
+    for campo, schema in props.items():
+        if not isinstance(schema, dict):
+            continue
+        enum = schema.get("enum") or _ramo_util(schema).get("enum") or []
+        for valor in enum[1:]:
+            conjuntos.append({**base, campo: valor})
+    for remover in RAMOS_EXCLUSIVOS.get(nome_tool, ()):
+        conjuntos.append({k: v for k, v in base.items() if k not in remover})
+    return conjuntos
+
+
+def _contrato_openapi() -> dict[str, dict[str, dict[str, Any]]]:
+    doc = json.loads(_FIXTURE_OPENAPI.read_text(encoding="utf-8"))
+    return doc["paths"]
+
+
+# `pagina` e `tamanhoPagina` saem em toda chamada do cliente, e o contrato os
+# declara de forma irregular: `/modulo-material/1` não declara nenhum dos dois,
+# `/modulo-uasg/1` declara só `pagina`, as rotas `_Id` não declaram nenhum. Onde
+# não são declarados, são de fato ignorados (medido em 2026-09-07:
+# `/modulo-material/1` devolve os 78 grupos com `tamanhoPagina=10`, e
+# `/modulo-uasg/1` devolve 500 registros com `tamanhoPagina=10`) — o que custa
+# uma paginação inútil, nunca um filtro perdido. Ficam de fora da checagem
+# porque o alvo aqui é o filtro que desaparece em silêncio.
+_CHAVES_DE_PAGINACAO = frozenset({"pagina", "tamanhoPagina"})
+
+
+def _violacoes_de_contrato(
+    caminho: str, query: dict[str, list[str]], contrato: dict[str, Any]
+) -> list[str]:
+    declarados = contrato.get(caminho)
+    if declarados is None:
+        return [f"{caminho}: path não existe no OpenAPI oficial"]
+
+    problemas: list[str] = []
+    for chave, valores in sorted(query.items()):
+        if chave in _CHAVES_DE_PAGINACAO:
+            continue
+        spec = declarados.get(chave)
+        if spec is None:
+            problemas.append(
+                f"{caminho}: parâmetro `{chave}` não existe no contrato "
+                f"(declarados: {', '.join(sorted(declarados))}) — o upstream "
+                f"devolve 200 ignorando o filtro"
+            )
+            continue
+        enum = spec.get("enum")
+        if enum:
+            fora = [v for v in valores if v not in {str(e) for e in enum}]
+            if fora:
+                problemas.append(
+                    f"{caminho}: `{chave}={fora[0]}` fora do enum {enum}"
+                )
+    faltando = [
+        nome
+        for nome, spec in declarados.items()
+        if spec.get("obrigatorio")
+        and nome not in query
+        and nome not in _CHAVES_DE_PAGINACAO
+    ]
+    if faltando:
+        problemas.append(
+            f"{caminho}: obrigatório(s) ausente(s) {faltando} — esta API "
+            f"responde 404 'Resource not found' a obrigatório faltando"
+        )
+    return problemas
+
+
+@pytest.mark.asyncio
+async def test_openapi_toda_chave_enviada_consta_do_contrato(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Nenhuma tool pode mandar chave/valor fora do contrato do Dados Abertos.
+
+    Exercita cada tool com todos os parâmetros preenchidos e valida o que sai
+    no fio. É o teste que faltava: sem ele, nome errado de parâmetro é
+    indistinguível de filtro funcionando, porque o upstream responde 200 aos
+    dois.
+    """
+    from compras_mcp.mcp_instance import mcp
+
+    contrato = _contrato_openapi()
+    httpx_mock.add_response(
+        url=re.compile(r"https?://.*"),
+        json={"resultado": [], "totalRegistros": 0, "totalPaginas": 0},
+        is_reusable=True,
+    )
+
+    tools = await mcp.get_tools()
+    problemas: list[str] = []
+    exercitadas: set[str] = set()
+    paths_visitados: set[str] = set()
+    vistas = 0
+
+    for nome in sorted(tools):
+        tool = tools[nome]
+        for args in _conjuntos_de_args(nome, tool.parameters):
+            # Tool que recusa o argumento sintético não chega a chamar o
+            # upstream: não há contrato a violar, e a cobertura é conferida
+            # no fim do teste.
+            with contextlib.suppress(Exception):
+                await tool.run(args)
+        requisicoes = httpx_mock.get_requests()[vistas:]
+        vistas += len(requisicoes)
+        for req in requisicoes:
+            url = urlparse(str(req.url))
+            if f"{url.scheme}://{url.netloc}" != _URL_DADOS_ABERTOS:
+                continue
+            exercitadas.add(nome)
+            paths_visitados.add(url.path)
+            problemas += [
+                f"{nome} -> {p}"
+                for p in _violacoes_de_contrato(
+                    url.path, parse_qs(url.query), contrato
+                )
+            ]
+
+    assert not problemas, "Chamadas fora do contrato do OpenAPI:\n" + "\n".join(
+        sorted(set(problemas))
+    )
+
+    nao_exercitadas = sorted(set(TOOLS_CRITICAS_DADOS_ABERTOS) - exercitadas)
+    assert not nao_exercitadas, (
+        "tools críticas não chegaram a chamar o Dados Abertos — o teste passou "
+        f"sem checar nada nelas: {nao_exercitadas}"
+    )
+
+    nao_visitados = sorted(set(PATHS_QUE_PRECISAM_SER_VISITADOS) - paths_visitados)
+    assert not nao_visitados, (
+        "rotas que ninguém exercitou nesta varredura — a query que o MCP manda "
+        f"para elas não foi conferida contra o contrato: {nao_visitados}"
+    )
+
+
+def test_openapi_registro_upstream_bate_com_o_contrato() -> None:
+    """O healthcheck usa `upstream_registry`; ele também tem que bater.
+
+    Um probe que manda parâmetro fora do contrato dá verde para uma rota que
+    na prática ignora o filtro — foi o que aconteceu com `tipo=C`: o registro
+    estava certo e as tools erradas, e ninguém comparou os dois.
+    """
+    contrato = _contrato_openapi()
+    problemas: list[str] = []
+
+    for rota in ROTAS:
+        if rota.api != "dados_abertos":
+            continue
+        query = {k: [str(v)] for k, v in (rota.params or {}).items()}
+        problemas += [
+            f"{rota.id} -> {p}"
+            for p in _violacoes_de_contrato(rota.path, query, contrato)
+            # o probe só precisa das chaves que ele manda; obrigatório
+            # ausente é checado ao vivo pelo próprio healthcheck
+            if "obrigatório" not in p
+        ]
+
+    assert not problemas, "Registro upstream fora do contrato:\n" + "\n".join(problemas)
+
+
+@live
+def test_openapi_snapshot_continua_igual_ao_upstream() -> None:
+    """Alarme de drift: a SEGES mexeu no contrato desde o snapshot?
+
+    Roda só com COMPRAS_LIVE_TESTS=1. Quando falhar, regenerar o fixture e
+    conferir tool por tool o que mudou — foi uma mudança dessas (`tipo`+`codigo`
+    na rota de preço) que derrubou a pesquisa de material em 2026-08.
+    """
+    spec = httpx.get(f"{_URL_DADOS_ABERTOS}/v3/api-docs", timeout=60).json()
+    atual: dict[str, dict[str, Any]] = {}
+    for path, item in spec["paths"].items():
+        params: dict[str, Any] = {}
+        for metodo, op in item.items():
+            if metodo not in ("get", "post", "put", "delete", "patch"):
+                continue
+            for p in op.get("parameters", []):
+                if p.get("in") != "query":
+                    continue
+                sch = p.get("schema") or {}
+                enum = sch.get("enum") or (sch.get("items") or {}).get("enum")
+                params[p["name"]] = {
+                    "obrigatorio": bool(p.get("required")),
+                    "enum": enum,
+                }
+        atual[path] = dict(sorted(params.items()))
+
+    snapshot = _contrato_openapi()
+    usados = {rota.path for rota in ROTAS if rota.api == "dados_abertos"}
+    divergentes = [
+        path
+        for path in sorted(usados)
+        if atual.get(path) != snapshot.get(path)
+    ]
+    assert not divergentes, (
+        "contrato upstream mudou nas rotas que o MCP usa: "
+        f"{divergentes}\nRegenerar tests/fixtures/dadosabertos_openapi_params.json"
+    )

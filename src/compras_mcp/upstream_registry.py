@@ -157,6 +157,15 @@ _DADOS_ABERTOS: list[RotaUpstream] = [
         campos_esperados=("codigoClasse", "nomeClasse"),
     ),
     RotaUpstream(
+        id="catmat_pdms",
+        api="dados_abertos",
+        modulo="catalogo",
+        path="/modulo-material/3_consultarPdmMaterial",
+        tools=("compras_catmat_listar_pdms",),
+        params={"codigoClasse": 7110},
+        campos_esperados=("codigoPdm", "nomePdm"),
+    ),
+    RotaUpstream(
         id="catmat_itens",
         api="dados_abertos",
         modulo="catalogo",
@@ -424,6 +433,16 @@ _DADOS_ABERTOS: list[RotaUpstream] = [
         },
         aceita_vazio=True,
     ),
+    RotaUpstream(
+        id="contratos_item_por_id",
+        api="dados_abertos",
+        modulo="contratos",
+        path="/modulo-contratos/2.1_consultarContratosItem_Id",
+        tools=("compras_contratos_item_consultar",),
+        params={"tipo": "idCompra"},
+        seed=("contratos_itens", {"codigo": "idCompra"}),
+        aceita_vazio=True,
+    ),
     # --- 10 Fornecedor -----------------------------------------------------
     RotaUpstream(
         id="fornecedor",
@@ -496,6 +515,18 @@ _DADOS_ABERTOS: list[RotaUpstream] = [
         aceita_vazio=True,
     ),
     RotaUpstream(
+        id="legado_itens_pregao",
+        api="dados_abertos",
+        modulo="legado",
+        path="/modulo-legado/4_consultarItensPregoes",
+        tools=("compras_legado_itens_pregao_listar",),
+        params={
+            "dt_hom_inicial": "2021-03-01",
+            "dt_hom_final": "2021-03-05",
+        },
+        campos_esperados=("id_compra", "valor_homologado_item"),
+    ),
+    RotaUpstream(
         id="legado_sem_licitacao",
         api="dados_abertos",
         modulo="legado",
@@ -503,6 +534,15 @@ _DADOS_ABERTOS: list[RotaUpstream] = [
         tools=("compras_legado_compras_sem_licitacao",),
         params={"dt_ano_aviso": _ano_passado()},
         aceita_vazio=True,
+    ),
+    RotaUpstream(
+        id="legado_itens_sem_licitacao",
+        api="dados_abertos",
+        modulo="legado",
+        path="/modulo-legado/6_consultarCompraItensSemLicitacao",
+        tools=("compras_legado_itens_sem_licitacao_listar",),
+        params={"dt_ano_aviso_licitacao": 2020},
+        campos_esperados=("co_conjunto_materiais", "vr_estimado"),
     ),
     RotaUpstream(
         id="legado_rdc",

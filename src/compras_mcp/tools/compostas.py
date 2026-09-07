@@ -795,10 +795,15 @@ async def compras_buscar_contratacoes_similares(
 ) -> dict[str, Any]:
     """Federa Dados Abertos + PNCP buscando contratações similares.
 
-    Composição: consulta resultados homologados (Dados Abertos 14.133) +
-    publicações PNCP filtrando pelo CATMAT/CATSER do item alvo, deduplica
-    por CNPJ órgão + ano + sequencial e devolve os `max_resultados` mais
-    recentes. Insumo para mapear benchmarks de outros órgãos.
+    Composição: consulta os **itens** de contratações 14.133 no Dados Abertos
+    (`/modulo-contratacoes/2_`, filtrando por `codItemCatalogo` e só itens com
+    resultado) + publicações PNCP do período, deduplica pelo número de controle
+    PNCP e devolve os `max_resultados` mais recentes. Insumo para mapear
+    benchmarks de outros órgãos.
+
+    O recorte por CATMAT/CATSER vale para a perna Dados Abertos. A perna PNCP é
+    best-effort por modalidade e não aceita filtro por item de catálogo — por
+    isso `amostra_dados_abertos` e `amostra_pncp` vêm separadas no payload.
 
     **Atenção latência**: chama o PNCP em 3 modalidades (Pregão, Dispensa,
     Concorrência) em paralelo. Cada chamada PNCP costuma levar 30-60s — o
@@ -827,17 +832,22 @@ async def compras_buscar_contratacoes_similares(
     data_inicio = hoje - timedelta(days=periodo_meses * 30)
 
     async def _dados_abertos_resultados() -> list[dict[str, Any]]:
+        # A rota de RESULTADOS (`/3_`) não declara filtro por item de catálogo:
+        # mandar `codigoItemCatalogo` para ela devolvia a janela inteira sem
+        # nenhum recorte, e esse ruído entrava no consolidado como se fosse
+        # contratação similar. O filtro por CATMAT/CATSER só existe na rota de
+        # ITENS (`/2_`), com o nome `codItemCatalogo` — e ela já traz fornecedor
+        # e valor homologado no mesmo registro.
         params: dict[str, Any] = {
-            "dataResultadoPncpInicial": format_date(data_inicio, "dados_abertos"),
-            "dataResultadoPncpFinal": format_date(hoje, "dados_abertos"),
+            "dataInclusaoPncpInicial": format_date(data_inicio, "dados_abertos"),
+            "dataInclusaoPncpFinal": format_date(hoje, "dados_abertos"),
+            "temResultado": "true",
         }
-        if codigo_catmat is not None:
-            params["codigoItemCatalogo"] = codigo_catmat
-        if codigo_catser is not None:
-            params["codigoItemCatalogo"] = codigo_catser
+        codigo_item = codigo_catmat if codigo_catmat is not None else codigo_catser
+        params["codItemCatalogo"] = codigo_item
         async with make_dados_abertos(settings) as c:
             resp = await c.list_resource(
-                "/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133",
+                "/modulo-contratacoes/2_consultarItensContratacoes_PNCP_14133",
                 pagina=1,
                 tamanho_pagina=max(max_resultados * 2, 100),
                 **params,
@@ -885,15 +895,29 @@ async def compras_buscar_contratacoes_similares(
     da_items = da_items if isinstance(da_items, list) else []
     pncp_items = pncp_items if isinstance(pncp_items, list) else []
 
-    # Deduplica por chave composta (cnpj + ano + sequencial quando disponível)
+    # Deduplica pelo número de controle PNCP, que é o identificador comum às
+    # duas fontes. O fallback composto (cnpj + ano + sequencial) só existe para
+    # registros do PNCP: os do Dados Abertos não trazem nenhum desses campos e,
+    # com ele sozinho, TODOS colapsavam na mesma chave "--" — só o primeiro
+    # item do Dados Abertos sobrevivia à deduplicação.
     chaves_vistas: set[str] = set()
     consolidado: list[dict[str, Any]] = []
-    for item in da_items + pncp_items:
-        chave = (
-            f"{item.get('cnpjOrgao') or item.get('orgaoEntidade', {}).get('cnpj') or ''}"
-            f"-{item.get('anoCompra') or item.get('ano') or ''}"
-            f"-{item.get('sequencialCompra') or item.get('sequencial') or ''}"
+    for indice, item in enumerate(da_items + pncp_items):
+        controle = (
+            item.get("numeroControlePNCPCompra")
+            or item.get("numeroControlePNCP")
+            or item.get("idContratacaoPNCP")
         )
+        if controle:
+            chave = str(controle)
+        else:
+            composta = (
+                f"{item.get('cnpjOrgao') or item.get('orgaoEntidade', {}).get('cnpj') or ''}"
+                f"-{item.get('anoCompra') or item.get('ano') or ''}"
+                f"-{item.get('sequencialCompra') or item.get('sequencial') or ''}"
+            )
+            # Sem identificador algum, não há como afirmar que é duplicata.
+            chave = composta if composta != "--" else f"_sem_id_{indice}"
         if chave in chaves_vistas:
             continue
         chaves_vistas.add(chave)
