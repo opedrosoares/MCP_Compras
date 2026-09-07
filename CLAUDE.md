@@ -103,3 +103,28 @@ ausente → stdio. Mesma lógica do mcp-inpi.
   `tools` em `manifest.json` quando registrar novas tools.
 - Railway: `Dockerfile` + `railway.toml` + `Procfile` configurados. Setar
   `TRANSPARENCIA_API_KEY` e (opcional) plugar Redis.
+
+### Release: só empurrar a tag
+
+`git tag -a vX.Y.Z && git push origin vX.Y.Z` dispara
+[.github/workflows/release.yml](.github/workflows/release.yml), que publica os
+três destinos **sem nenhum segredo no repo** — PyPI por Trusted Publishing e
+registry por `mcp-publisher login github-oidc`, ambos trocando o token OIDC
+efêmero do Actions:
+
+1. GitHub Release com o `.mcpb`
+2. PyPI (`compras-mcp`)
+3. Registry oficial (`io.github.opedrosoares/mcp-compras`)
+
+A versão vive em **cinco** lugares (`pyproject.toml`,
+`src/compras_mcp/__init__.py`, `manifest.json`, e duas vezes em `server.json` —
+raiz e `packages[].version`). O job `build` roda
+`scripts/check_release_versions.py` e aborta antes de publicar qualquer coisa se
+algum divergir da tag. Isso importa porque o registry recusa o publish quando a
+versão de `packages[]` não existe no PyPI, e o PyPI nunca aceita reenvio de uma
+versão já publicada — descobrir a divergência no meio do pipeline deixaria a
+release pela metade.
+
+O `server.json` precisa acompanhar toda subida de versão. O badge do M8ven e o
+comentário `<!-- mcp-name: ... -->` no README são provas de propriedade
+(listagem e registry, respectivamente) — não remover nenhum dos dois.

@@ -1,24 +1,138 @@
 name: Release
 
+# Toda tag `v*` publica os três destinos, sem nenhum segredo guardado no repo:
+#   1. GitHub Release com o compras.mcpb (Claude Desktop)
+#   2. PyPI via Trusted Publishing (OIDC)
+#   3. Registry oficial do MCP via github-oidc
+#
+# Os dois últimos autenticam trocando o token OIDC efêmero do Actions. O
+# registry deriva a permissão do claim `repository_owner`, concedendo
+# `io.github.<owner>/*` — que é exatamente o namespace de server.json.
+#
+# Ordem importa: o registry recusa o publish se a versão declarada em
+# server.json ainda não existir no PyPI. Por isso `registry` depende de `pypi`
+# e ainda espera o índice do PyPI propagar.
+
 on:
   push:
     tags:
       - "v*"
 
+# Default restritivo; cada job eleva só o que precisa.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-mcpb:
+  build:
+    name: Build e conferência de versão
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.versao.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Tag bate com as 5 versões do repo
+        id: versao
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 scripts/check_release_versions.py "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install --quiet build
+          python -m build --outdir dist-pypi
+
+      # build_mcpb.py grava em dist/ (caminho fixo), por isso os artefatos do
+      # PyPI vão para dist-pypi/ — o publish do PyPI sobe a pasta inteira e
+      # engasgaria com um .mcpb no meio.
       - name: Build compras.mcpb
         run: python3 build_mcpb.py
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-pypi
+          path: dist-pypi/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-mcpb
+          path: dist/compras.mcpb
+
+  github-release:
+    name: GitHub Release (.mcpb)
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-mcpb
+          path: dist
+
+      - uses: softprops/action-gh-release@v2
         with:
           files: dist/compras.mcpb
           generate_release_notes: true
+
+  pypi:
+    name: PyPI (Trusted Publishing)
+    needs: build
+    runs-on: ubuntu-latest
+    # O publisher confiável no PyPI está amarrado a este environment: só um job
+    # que rode em `pypi` consegue trocar o OIDC por permissão de upload.
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-pypi
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  registry:
+    name: MCP Registry oficial (OIDC)
+    needs: [build, pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    env:
+      # Bump manual e deliberado: o binário é baixado e executado no pipeline.
+      # Releases em github.com/modelcontextprotocol/registry/releases
+      MCP_PUBLISHER_VERSION: v1.8.1
+      VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4 # o publisher lê ./server.json
+
+      - name: Esperar o PyPI indexar a versão
+        run: |
+          for tentativa in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://pypi.org/pypi/compras-mcp/${VERSION}/json")
+            if [ "$code" = "200" ]; then
+              echo "PyPI indexou ${VERSION}"
+              exit 0
+            fi
+            echo "tentativa ${tentativa}/30: HTTP ${code}, aguardando 10s"
+            sleep 10
+          done
+          echo "::error::PyPI não indexou ${VERSION} em 5 minutos" >&2
+          exit 1
+
+      - name: Instalar mcp-publisher
+        run: |
+          curl -fsSL \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+
+      - name: Publicar no registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
