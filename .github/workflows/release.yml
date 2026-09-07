@@ -95,7 +95,12 @@ jobs:
           name: dist-pypi
           path: dist
 
+      # skip-existing torna o re-run seguro: se o `pypi` passar e o `registry`
+      # falhar, reexecutar o workflow inteiro encontraria a versão já no PyPI e
+      # abortaria antes de chegar ao passo que de fato precisa rodar de novo.
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
   registry:
     name: MCP Registry oficial (OIDC)
