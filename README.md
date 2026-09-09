@@ -85,6 +85,10 @@ Não exige instalação local nenhuma — qualquer cliente MCP aponta para uma U
 
 [**Baixar `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) — 23 KB, cinco arquivos, zero dependências.
 
+**Instalação e primeiro uso em vídeo:**
+
+[![Pesquisa de preços para ETP em 1 minuto | MCP Compras.gov.br](https://img.youtube.com/vi/ERIxOW1UyzA/hqdefault.jpg)](https://youtu.be/ERIxOW1UyzA)
+
 Desde a **v0.4.0** o bundle não carrega mais o servidor: ele é um *cliente* do servidor oficial hospedado. O que vai dentro dele é `manifest.json`, `bridge.js`, ícone, README e licença — nada mais.
 
 ```
