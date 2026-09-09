@@ -51,9 +51,13 @@ Cada linha abaixo foi confirmada por probe direto ao upstream (não é suposiç�
 
 ### Opção 1 — Desktop Extension (.mcpb), recomendado para Claude Desktop
 
-Baixe o `compras.mcpb` mais recente em [Releases](https://github.com/opedrosoares/MCP_Compras/releases/latest) e abra com duplo-clique — o Claude Desktop instala e pede as configurações (chave da Transparência, Redis, etc.) automaticamente.
+Baixe o `compras.mcpb` mais recente em [Releases](https://github.com/opedrosoares/MCP_Compras/releases/latest) e abra com duplo-clique. **Não há o que configurar e nada é instalado na sua máquina**: o bundle tem 22 KB e carrega só uma ponte stdio → HTTP em JavaScript, que roda no Node que já vem com o Claude Desktop e conversa com o servidor oficial hospedado (`https://mcp-compras.up.railway.app/mcp`). Chave da Transparência, Redis e máscara de CPF são configuração *do servidor*, não sua.
 
-Ou gere localmente a partir do código-fonte:
+Isso significa que o `.mcpb` **não** exige Python, `pip`, `uv` nem venv. Até a v0.3.x ele empacotava o servidor inteiro e montava um venv no primeiro start — o que falhava com `Server disconnected` em máquinas sem um binário chamado `python` no PATH (o caso do macOS, que só tem `python3`). Se você tem uma instalação antiga, remova a extensão e instale a nova.
+
+Quem hospeda a própria instância troca o campo **Endpoint do servidor MCP**, nas configurações da extensão, pela URL `/mcp` dela — o resto continua igual. Para rodar tudo na sua máquina, sem servidor remoto, use a Opção 2.
+
+Ou gere o bundle localmente a partir do código-fonte:
 
 ```bash
 git clone https://github.com/opedrosoares/MCP_Compras.git
@@ -160,6 +164,8 @@ Depois do deploy (ver seção abaixo), o endpoint MCP fica em `https://SEU-PROJE
   ```
 
 ## Configuração
+
+Estas variáveis são do **servidor** — valem para a Opção 2 (local via uv/pip) e para o seu deploy remoto. Quem instala o `.mcpb` não configura nada disso: a extensão só fala com o endpoint, e o único campo que ela expõe é a URL dele.
 
 | Variável | Obrigatória | Descrição |
 |----------|-------------|-----------|
@@ -284,6 +290,8 @@ railway up
 ```
 
 ## Requisitos de sistema
+
+Para o `.mcpb` (Opção 1): **nada**. O Node já vem com o Claude Desktop. O que segue vale para rodar o servidor você mesmo (Opções 2 e 3):
 
 - Python ≥ 3.11
 - [uv](https://docs.astral.sh/uv/) (recomendado) ou `pip`

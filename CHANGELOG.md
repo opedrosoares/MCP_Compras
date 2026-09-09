@@ -4,6 +4,62 @@ Todas as mudanças notáveis. Cada release foi descoberto em bateria E2E
 real contra o servidor em produção (Railway + Redis) e validado por
 probe direto ao upstream antes do fix.
 
+## [0.4.0] — 2026-09-09
+
+O `.mcpb` publicado não instalava: o Claude Desktop mostrava `Server
+disconnected` na hora, antes de qualquer log do servidor. O manifest pedia
+`command: "python"` — binário que **não existe no PATH do macOS** (lá é
+`python3`) — e, se existisse, o `bootstrap.py` ainda ia criar um venv e rodar
+`pip install` de cinco dependências no primeiro start, muito além do tempo que
+o Desktop espera por um handshake.
+
+A correção troca o modelo de distribuição do bundle. O `.mcpb` deixa de
+carregar o servidor e passa a ser um cliente do deploy hospedado, que já roda
+com chave da Transparência e Redis configurados.
+
+### Changed
+
+- **`.mcpb` autocontido, 22 KB** (era ~1 MB com `src/` inteiro dentro).
+  O bundle agora leva apenas `manifest.json`, `bridge.js`, ícone, README e
+  licença. Nada é instalado na máquina do usuário e nada é compilado no
+  primeiro start: o handshake completa em ~0,6 s.
+- **Runtime do bundle: Node, não Python.** É o único runtime que o Claude
+  Desktop garante — ele acompanha o app no macOS e no Windows, e a própria
+  documentação do MCPB recomenda Node por isso. `compatibility.runtimes` passou
+  a declarar `node >= 18`.
+- **`user_config` reduzido a um campo.** `TRANSPARENCIA_API_KEY`, `REDIS_URL`,
+  `INCLUIR_CPF_COMPLETO` e `LOG_LEVEL` eram perguntas que a extensão não tem
+  como responder — são configuração do servidor. Restou **Endpoint do servidor
+  MCP**, com o oficial como padrão, para quem hospeda a própria instância.
+- **`build_mcpb.py`** empacota por lista explícita (origem → destino no bundle)
+  e falha o build se o `entry_point`, o `args` do `mcp_config` ou o ícone
+  apontarem para arquivo que não entrou no zip — erro que, antes, só aparecia
+  na máquina do usuário na hora de instalar.
+
+### Added
+
+- **`mcpb/bridge.js`** — ponte stdio → Streamable HTTP, zero dependências.
+  Além do caminho feliz, trata o que a rede faz de ruim: resposta em SSE ou em
+  `application/json`; `Mcp-Session-Id` propagado; sessão perdida em restart do
+  Railway (HTTP 404) refeita por baixo, sem o cliente ver segunda resposta com
+  o id do `initialize`; 5xx/429 de cold start retentados com backoff; falha
+  definitiva devolvida como erro JSON-RPC, em vez de deixar a chamada pendurada;
+  canal GET para as notificações que o servidor manda por iniciativa própria;
+  `DELETE` da sessão na saída.
+- **`tests/test_mcpb_bridge.py`** — seis testes que sobem a ponte como o Claude
+  Desktop sobe, contra um servidor MCP falso em stdlib, e exercitam justamente
+  esses caminhos de falha. O `.mcpb` era a única parte do projeto sem teste
+  nenhum, e é a que quebra mais longe de qualquer log nosso.
+
+### Removed
+
+- **`bootstrap.py`** — o venv + `pip install` do primeiro start deixou de
+  existir junto com o modelo antigo de bundle.
+
+Quem quer rodar o servidor na própria máquina não perdeu nada: `pip install
+compras-mcp` (PyPI) e `uv run compras-mcp` seguem iguais, com todas as
+variáveis de ambiente de sempre.
+
 ## [0.3.17] — 2026-09-07
 
 Análise da notícia da SEGES/MGI de 26/07/2024 ("quatro novos serviços de

@@ -134,6 +134,12 @@ nomeadas: `git push origin main`, `git push origin vX.Y.Z`.
 
 - `.mcpb`: `python build_mcpb.py` → `dist/compras.mcpb`. Atualizar a lista
   `tools` em `manifest.json` quando registrar novas tools.
+  O bundle **não** carrega o servidor desde a v0.4.0: leva só a ponte
+  `mcpb/bridge.js` (stdio → Streamable HTTP, zero dependências), que fala com o
+  deploy hospedado. O runtime é **Node** porque é o único que o Claude Desktop
+  garante — `command: "python"` quebrava no macOS, que não tem esse binário no
+  PATH. Mexeu no bridge? `pytest tests/test_mcpb_bridge.py` sobe ele como o
+  Desktop sobe, contra um servidor MCP falso.
 - Railway: `Dockerfile` + `railway.toml` + `Procfile` configurados. Setar
   `TRANSPARENCIA_API_KEY` e (opcional) plugar Redis.
 
