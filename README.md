@@ -9,6 +9,8 @@ Servidor MCP que reúne em um único pacote as APIs públicas do ecossistema **C
 
 **100 tools + 6 prompts + 6 resources** cobrindo Dados Abertos, PNCP, Portal da Transparência/CGU, Comprasnet Contratos e BrasilAPI/Receita.
 
+> **Usa Claude Desktop?** [**Baixe o `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) e abra com duplo-clique. São 23 KB, sem instalar Python e sem configurar chave nenhuma — entenda em [Como funciona a extensão .mcpb](#como-funciona-a-extensão-mcpb).
+
 Apoia a elaboração de:
 
 - Estudos Técnicos Preliminares (ETP)
@@ -51,11 +53,9 @@ Cada linha abaixo foi confirmada por probe direto ao upstream (não é suposiç�
 
 ### Opção 1 — Desktop Extension (.mcpb), recomendado para Claude Desktop
 
-Baixe o `compras.mcpb` mais recente em [Releases](https://github.com/opedrosoares/MCP_Compras/releases/latest) e abra com duplo-clique. **Não há o que configurar e nada é instalado na sua máquina**: o bundle tem 22 KB e carrega só uma ponte stdio → HTTP em JavaScript, que roda no Node que já vem com o Claude Desktop e conversa com o servidor oficial hospedado (`https://mcp-compras.up.railway.app/mcp`). Chave da Transparência, Redis e máscara de CPF são configuração *do servidor*, não sua.
+[**Baixar `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) — o link aponta sempre para a release mais recente. Abra o arquivo com duplo-clique e o Claude Desktop instala.
 
-Isso significa que o `.mcpb` **não** exige Python, `pip`, `uv` nem venv. Até a v0.3.x ele empacotava o servidor inteiro e montava um venv no primeiro start — o que falhava com `Server disconnected` em máquinas sem um binário chamado `python` no PATH (o caso do macOS, que só tem `python3`). Se você tem uma instalação antiga, remova a extensão e instale a nova.
-
-Quem hospeda a própria instância troca o campo **Endpoint do servidor MCP**, nas configurações da extensão, pela URL `/mcp` dela — o resto continua igual. Para rodar tudo na sua máquina, sem servidor remoto, use a Opção 2.
+**Não há o que configurar e nada é instalado na sua máquina**: nem Python, nem `pip`, nem chave de API. O porquê está em [Como funciona a extensão .mcpb](#como-funciona-a-extensão-mcpb).
 
 Ou gere o bundle localmente a partir do código-fonte:
 
@@ -80,6 +80,41 @@ Veja [Conectar a um cliente MCP](#conectar-a-um-cliente-mcp) para registrar esse
 ### Opção 3 — Remoto (Railway), para uso via web/mobile ou compartilhado por uma equipe
 
 Não exige instalação local nenhuma — qualquer cliente MCP aponta para uma URL HTTP. Veja o passo a passo completo em [Deploy remoto (Railway)](#deploy-remoto-railway).
+
+## Como funciona a extensão .mcpb
+
+[**Baixar `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) — 23 KB, cinco arquivos, zero dependências.
+
+Desde a **v0.4.0** o bundle não carrega mais o servidor: ele é um *cliente* do servidor oficial hospedado. O que vai dentro dele é `manifest.json`, `bridge.js`, ícone, README e licença — nada mais.
+
+```
+Claude Desktop  ──stdio──▶  bridge.js  ──HTTPS (Streamable HTTP)──▶  mcp-compras.up.railway.app/mcp
+ (Node embutido)             23 KB, 0 deps                                        │
+                                                                                  ▼
+                                        Dados Abertos · PNCP · CGU · Comprasnet · BrasilAPI
+```
+
+O `bridge.js` roda no **Node que já acompanha o Claude Desktop** — é o único runtime que o app garante no macOS e no Windows, e o formato `.mcpb` não tem um tipo "remoto" que dispensaria a ponte. Daí a extensão não exigir Python nem venv.
+
+**O que fica do lado do servidor**, e por isso a extensão não te pergunta nada na instalação: a chave do Portal da Transparência, o Redis do cache e a máscara de CPF exigida pela LGPD.
+
+**O que a ponte trata** além de repassar mensagens:
+
+| Situação | Comportamento |
+|----------|---------------|
+| Resposta em SSE ou em `application/json` | aceita as duas formas do Streamable HTTP |
+| Servidor reiniciou e perdeu a sessão (HTTP 404) | refaz o handshake por baixo e repete a chamada |
+| Cold start, 5xx ou 429 | retenta com backoff |
+| Servidor inacessível | devolve erro JSON-RPC — a pergunta não fica pendurada |
+| Fim da conversa | `DELETE` da sessão, sem sessão órfã no servidor |
+
+Cada uma dessas linhas tem teste em [tests/test_mcpb_bridge.py](tests/test_mcpb_bridge.py), que sobe a ponte do mesmo jeito que o Claude Desktop sobe, contra um servidor MCP falso.
+
+**Tem a sua própria instância?** Troque o campo **Endpoint do servidor MCP**, nas configurações da extensão, pela URL `/mcp` do seu deploy — veja [Deploy remoto (Railway)](#deploy-remoto-railway). O padrão é o servidor público oficial.
+
+**Vindo da v0.3.x?** Remova a extensão antiga antes de instalar. Até lá o bundle empacotava o servidor inteiro e montava um venv com `pip install` no primeiro start, o que falhava com `Server disconnected` em máquinas sem um binário chamado `python` no PATH — o caso do macOS, que só tem `python3`.
+
+**Quando *não* usar o `.mcpb`:** se as consultas não podem sair da sua rede, ou se você quer usar a sua própria chave da CGU, rode o servidor localmente (Opção 2).
 
 ## Conectar a um cliente MCP
 
