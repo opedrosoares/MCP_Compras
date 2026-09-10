@@ -9,7 +9,7 @@ chave da Transparência configurada no próprio servidor.
 
 ## 1. Criar conta no Railway
 
-Acesse [railway.com](https://railway.com), clique em **Sign Up** e faça login com GitHub, GitLab ou e-mail.
+Acesse [railway.com](https://railway.com?referralCode=jJJ7Xz), clique em **Sign Up** e faça login com GitHub, GitLab ou e-mail.
 
 ## 2. Instalar o Railway CLI
 
