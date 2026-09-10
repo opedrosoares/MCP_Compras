@@ -40,5 +40,8 @@ Thumbs.db
 scratch/
 tmp/
 
-# Rascunhos locais
-/docs
+# Rascunhos locais — as páginas públicas de /docs ficam versionadas;
+# rascunho novo vai para /docs/local/
+/docs/local/
+/docs/BBSIA_cadastro_MCP_Compras.md
+/docs/errata-bbsia.html

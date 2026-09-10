@@ -5,449 +5,105 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 [![FastMCP](https://img.shields.io/badge/FastMCP-2.x-informational)](https://github.com/jlowin/fastmcp)
 
-Servidor MCP que reúne em um único pacote as APIs públicas do ecossistema **Compras.gov.br**, voltado a analistas e técnicos das áreas de **planejamento de contratação** e **execução contratual**.
+### Pergunte sobre compras públicas em português. Receba a resposta com dado oficial.
 
-**100 tools + 6 prompts + 6 resources** cobrindo Dados Abertos, PNCP, Portal da Transparência/CGU, Comprasnet Contratos e BrasilAPI/Receita.
+Este projeto liga o Claude — ou qualquer assistente de IA compatível com MCP — às APIs públicas do
+**Compras.gov.br**, do **PNCP** e do **Portal da Transparência**. Em vez de abrir cinco portais e
+cruzar planilhas, você pergunta:
 
-> **Usa Claude Desktop?** [**Baixe o `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) e abra com duplo-clique. São 23 KB, sem instalar Python e sem configurar chave nenhuma — entenda em [Como funciona a extensão .mcpb](#como-funciona-a-extensão-mcpb).
+> *"Qual o preço médio que o governo federal pagou em cadeiras ergonômicas nos últimos 12 meses?"*
+>
+> *"O fornecedor do CNPJ 00.000.000/0001-91 tem alguma sanção vigente?"*
+>
+> *"Existe ata de registro de preços vigente, com saldo, para notebooks?"*
 
-Apoia a elaboração de:
+Feito para quem trabalha com **planejamento de contratação** e **execução contratual**: ETP, TR,
+pesquisa de preços no padrão da IN SEGES/ME 65/2021, adesão a ata (carona), due diligence de
+fornecedor, benchmark entre órgãos.
 
-- Estudos Técnicos Preliminares (ETP)
-- Termos de Referência (TR)
-- Pesquisa de preços no padrão IN SEGES/ME 65/2021
-- Checagem de sanções de fornecedores (CEIS, CNEP, CEPIM, CEAF)
-- Análise de atas de registro de preço (ARP) para adesão (carona)
-- Benchmark inter-órgãos via Portal Nacional de Contratações Públicas (PNCP)
-- Due diligence de fornecedor (cadastro + sanções + Receita Federal)
+## Instalar em 1 minuto (Claude Desktop)
 
-## APIs cobertas
+1. [**Baixe o `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb)
+2. Abra o arquivo com **duplo-clique** — o Claude Desktop instala sozinho
+3. Comece a perguntar
 
-| API | URL base | Autenticação |
-|-----|----------|--------------|
-| Dados Abertos Compras | `dadosabertos.compras.gov.br` | pública |
-| PNCP — Portal Nacional | `pncp.gov.br/api/consulta` | pública |
-| Portal da Transparência (CGU) | `api.portaldatransparencia.gov.br` | chave gratuita |
-| Comprasnet Contratos | `contratos.comprasnet.gov.br/api` | pública (rotas `/api/*`) |
-| BrasilAPI / MinhaReceita | `brasilapi.com.br` | pública |
-
-### ⚠️ Aviso operacional
-
-Cada linha abaixo foi confirmada por probe direto ao upstream (não é suposição). Rode `compras_healthcheck` a qualquer momento para ver a situação **atual** de cada módulo — esta lista é o retrato mais recente conhecido, o healthcheck é o retrato ao vivo.
-
-**Resolvidos** (deixados aqui para quem encontrar issues antigas ou forks desatualizados):
-
-- ✅ **Família `/modulo-uasg/*`** (`compras_uasg_*`, `compras_orgao_*`) — chegou a devolver 404 para todo mundo e a documentação atribuía isso a bug de roteamento sem fix possível. Diagnóstico corrigido em 2026-08 (v0.3.13): faltava o parâmetro obrigatório `statusUasg`/`statusOrgao` — a API responde 404 (não 400) quando ele falta. Hoje devolve ~22 mil UASGs e ~12 mil órgãos normalmente.
-- ✅ **`compras_pesquisar_preco_material`** — o contrato da rota `/modulo-pesquisa-preco/1_consultarMaterial` mudou de `codigoItemCatalogo=<int>` para o par `tipo` (`codigoItemCatalogo`|`codigoPdm`) + `codigo` (string), sem versionar. Corrigido em v0.3.13.
-
-**Em aberto** (limitação real do upstream, não do MCP):
-
-- **CATMAT busca textual quebrada**: o filtro `descricao` (e variantes `nome`, `termo`, `q`) de `/modulo-material/4_consultarItemMaterial` ignora o valor e devolve o universo CATMAT inteiro (~340k itens). Use `compras_catmat_listar_grupos` → `_listar_classes` → `_buscar` com `codigo_grupo`/`codigo_classe`. A tool emite `_aviso_filtro` quando detecta o problema.
-- **Filtro UASG em `/modulo-legado/*`**: pregões e licitações têm bug Hibernate confirmado no upstream — o swagger documenta `co_uasg`/`uasg`, mas o atributo não existe no modelo da view (`400 Bad Request`). Os parâmetros foram removidos das tools `compras_legado_pregoes_listar` e `compras_legado_licitacoes_listar`; para filtrar por UASG, faça client-side no retorno.
-- **`compras_pncp_orgao_unidades`**: a rota `/v1/orgaos/{cnpj}/unidades` não é documentada no contrato oficial do PNCP Consulta — devolve 404 para CNPJs que não publicam diretamente (ex.: CNPJ raiz de órgão cujas unidades publicam com CNPJ próprio). A tool devolve diagnóstico com alternativas em vez de estourar exception.
-- **`compras_pncp_contratacao_itens`**: pode devolver 404 mesmo quando a contratação-pai responde 200 — inconsistência observada no upstream, não reproduzida de forma determinística.
-- **Portal da Transparência (CGU)**: o servidor é protegido por AWS WAF que bloqueia (`405` + página HTML "Human Verification") clientes HTTP com `User-Agent` genérico, mesmo com chave válida. O cliente deste MCP já envia um `User-Agent` browser-like como mitigação; se a CGU mudar as regras do WAF, as tools `compras_sancao_*` podem voltar a falhar — não há fix definitivo do lado do MCP.
-- **Comprasnet `/api/contrato/ug/{uasg}`**: o endpoint não pagina e devolve a lista completa em uma resposta única (pode passar de 1 MB). `compras_contrato_comprasnet_por_uasg` aplica fatiamento client-side com cache do payload completo para não inundar o contexto do LLM.
-
-## Instalação
-
-### Opção 1 — Desktop Extension (.mcpb), recomendado para Claude Desktop
-
-[**Baixar `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) — o link aponta sempre para a release mais recente. Abra o arquivo com duplo-clique e o Claude Desktop instala.
-
-**Não há o que configurar e nada é instalado na sua máquina**: nem Python, nem `pip`, nem chave de API. O porquê está em [Como funciona a extensão .mcpb](#como-funciona-a-extensão-mcpb).
-
-Ou gere o bundle localmente a partir do código-fonte:
-
-```bash
-git clone https://github.com/opedrosoares/MCP_Compras.git
-cd MCP_Compras
-python3 build_mcpb.py     # gera dist/compras.mcpb
-open dist/compras.mcpb    # macOS — no Windows/Linux, abra com duplo-clique no Claude Desktop
-```
-
-### Opção 2 — Local via uv (desenvolvimento ou Claude Code)
-
-```bash
-git clone https://github.com/opedrosoares/MCP_Compras.git
-cd MCP_Compras
-uv sync
-uv run compras-mcp
-```
-
-Veja [Conectar a um cliente MCP](#conectar-a-um-cliente-mcp) para registrar esse comando no Claude Desktop ou Claude Code.
-
-### Opção 3 — Remoto (Railway), para uso via web/mobile ou compartilhado por uma equipe
-
-Não exige instalação local nenhuma — qualquer cliente MCP aponta para uma URL HTTP. Veja o passo a passo completo em [Deploy remoto (Railway)](#deploy-remoto-railway).
-
-## Como funciona a extensão .mcpb
-
-[**Baixar `compras.mcpb`**](https://github.com/opedrosoares/MCP_Compras/releases/latest/download/compras.mcpb) — 23 KB, cinco arquivos, zero dependências.
-
-**Instalação e primeiro uso em vídeo:**
+São 23 KB e **nada é instalado na sua máquina**: nem Python, nem chave de API, nem configuração.
 
 [![Pesquisa de preços para ETP em 1 minuto | MCP Compras.gov.br](https://img.youtube.com/vi/ERIxOW1UyzA/hqdefault.jpg)](https://youtu.be/ERIxOW1UyzA)
 
-Desde a **v0.4.0** o bundle não carrega mais o servidor: ele é um *cliente* do servidor oficial hospedado. O que vai dentro dele é `manifest.json`, `bridge.js`, ícone, README e licença — nada mais.
-
-```
-Claude Desktop  ──stdio──▶  bridge.js  ──HTTPS (Streamable HTTP)──▶  mcp-compras.up.railway.app/mcp
- (Node embutido)             23 KB, 0 deps                                        │
-                                                                                  ▼
-                                        Dados Abertos · PNCP · CGU · Comprasnet · BrasilAPI
-```
-
-O `bridge.js` roda no **Node que já acompanha o Claude Desktop** — é o único runtime que o app garante no macOS e no Windows, e o formato `.mcpb` não tem um tipo "remoto" que dispensaria a ponte. Daí a extensão não exigir Python nem venv.
-
-**O que fica do lado do servidor**, e por isso a extensão não te pergunta nada na instalação: a chave do Portal da Transparência, o Redis do cache e a máscara de CPF exigida pela LGPD.
-
-**O que a ponte trata** além de repassar mensagens:
-
-| Situação | Comportamento |
-|----------|---------------|
-| Resposta em SSE ou em `application/json` | aceita as duas formas do Streamable HTTP |
-| Servidor reiniciou e perdeu a sessão (HTTP 404) | refaz o handshake por baixo e repete a chamada |
-| Cold start, 5xx ou 429 | retenta com backoff |
-| Servidor inacessível | devolve erro JSON-RPC — a pergunta não fica pendurada |
-| Fim da conversa | `DELETE` da sessão, sem sessão órfã no servidor |
-
-Cada uma dessas linhas tem teste em [tests/test_mcpb_bridge.py](tests/test_mcpb_bridge.py), que sobe a ponte do mesmo jeito que o Claude Desktop sobe, contra um servidor MCP falso.
-
-**Tem a sua própria instância?** Troque o campo **Endpoint do servidor MCP**, nas configurações da extensão, pela URL `/mcp` do seu deploy — veja [Deploy remoto (Railway)](#deploy-remoto-railway). O padrão é o servidor público oficial.
-
-**Vindo da v0.3.x?** Remova a extensão antiga antes de instalar. Até lá o bundle empacotava o servidor inteiro e montava um venv com `pip install` no primeiro start, o que falhava com `Server disconnected` em máquinas sem um binário chamado `python` no PATH — o caso do macOS, que só tem `python3`.
-
-**Quando *não* usar o `.mcpb`:** se as consultas não podem sair da sua rede, ou se você quer usar a sua própria chave da CGU, rode o servidor localmente (Opção 2).
-
-## Conectar a um cliente MCP
-
-### Claude Code — `.mcp.json` do projeto ou `~/.claude.json` (global)
-
-Servidor local via stdio (assume `compras-mcp` instalado no PATH — via `uv tool install .` ou `pip install .`):
+> Usa **Claude Code**, **Cursor**, ou quer rodar o servidor você mesmo?
+> O [guia de instalação](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/instalacao.md) tem os três caminhos.
 
-```json
-{
-  "mcpServers": {
-    "compras": {
-      "command": "compras-mcp",
-      "env": {
-        "TRANSPARENCIA_API_KEY": "sua-chave-aqui"
-      }
-    }
-  }
-}
-```
+## O que dá para fazer
 
-Sem instalar globalmente, rodando direto do clone via `uv`:
+| Se você precisa… | Pergunte algo como |
+|------------------|--------------------|
+| **Pesquisa de preços para um ETP** | *"Monte a pesquisa de preços de cadeira ergonômica no padrão da IN 65/2021"* — vem mediana, média, desvio e descarte de outliers |
+| **Checar um fornecedor** | *"Esse CNPJ tem sanção no CEIS, CNEP, CEPIM ou CEAF?"* — cadastro, sanções, contratos e dados da Receita em uma resposta |
+| **Achar uma ata para carona** | *"Tem ata vigente com saldo para esse item?"* — inclui saldo por item e adesões já feitas |
+| **Ler o Termo de Referência de outro órgão** | *"Baixe o Edital e o TR dessa contratação do PNCP"* — arquivos com URL de download direto |
+| **Planejar com base no que os outros compram** | *"O que os órgãos federais planejaram comprar desse item este ano?"* — PGC e PCA |
+| **Acompanhar contratos vigentes** | *"Quais contratos vencem em 90 dias e quais tiveram aditivo?"* — vigência, aditivos, fiscais, empenhos |
 
-```json
-{
-  "mcpServers": {
-    "compras": {
-      "command": "uv",
-      "args": ["run", "--directory", "/caminho/para/MCP_Compras", "compras-mcp"],
-      "env": {
-        "TRANSPARENCIA_API_KEY": "sua-chave-aqui"
-      }
-    }
-  }
-}
-```
+Os passos por trás de cada um estão em
+[Exemplos de uso](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/exemplos.md).
 
-`TRANSPARENCIA_API_KEY` é opcional: sem ela, todas as tools funcionam exceto as de sanções (`compras_sancao_*`, `compras_checar_sancoes_fornecedor`, ramificações de sanção em `compras_perfil_fornecedor_completo`).
+## O que vem dentro
 
-### Claude Desktop (registro manual, sem o `.mcpb`)
+**100 tools + 6 prompts + 6 resources**, cobrindo catálogo (CATMAT/CATSER), pesquisa de preços,
+planejamento (PGC/PCA), atas de registro de preços, contratações pela Lei 14.133 e pela 8.666,
+contratos, fornecedores, sanções, PNCP, órgãos e UASGs, indicadores e analítica.
 
-Edite o `claude_desktop_config.json`:
+Cinco fontes oficiais, todas públicas: **Dados Abertos Compras**, **PNCP**, **Portal da
+Transparência (CGU)**, **Comprasnet Contratos** e **BrasilAPI/Receita**. Só a de sanções pede uma
+chave — gratuita, e apenas para quem roda o próprio servidor.
 
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- Linux: `~/.config/Claude/claude_desktop_config.json`
+Catálogo completo em
+[Tools, prompts e resources](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/ferramentas.md).
 
-```json
-{
-  "mcpServers": {
-    "compras": {
-      "command": "compras-mcp",
-      "env": {
-        "TRANSPARENCIA_API_KEY": "sua-chave-aqui"
-      }
-    }
-  }
-}
-```
+## Documentação
 
-### Servidor remoto (Railway) via HTTP
+| Página | Para quê |
+|--------|----------|
+| [Instalação](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/instalacao.md) | Os três caminhos, conexão com clientes MCP e requisitos |
+| [Como funciona a extensão `.mcpb`](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/extensao-mcpb.md) | O que o bundle de 23 KB faz, e por que não instala nada |
+| [Configuração](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/configuracao.md) | Variáveis de ambiente e a chave gratuita da CGU |
+| [Deploy remoto (Railway)](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/deploy-railway.md) | Subir a sua própria instância, passo a passo |
+| [Tools, prompts e resources](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/ferramentas.md) | Catálogo completo e fontes de dados |
+| [Exemplos de uso](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/exemplos.md) | Fluxos reais, passo a passo |
+| [Qualidade das APIs públicas](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/qualidade-das-apis.md) | Diagnóstico do upstream, com causa raiz e contorno |
+| [Arquitetura](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/arquitetura.md) | Padrões internos, cache, LGPD, testes de contrato |
 
-Depois do deploy (ver seção abaixo), o endpoint MCP fica em `https://SEU-PROJETO.up.railway.app/mcp`. Não há autenticação própria — é o mesmo servidor, só que em modo HTTP em vez de stdio.
+Também: [Changelog](https://github.com/opedrosoares/MCP_Compras/blob/main/CHANGELOG.md) ·
+[Roadmap](https://github.com/opedrosoares/MCP_Compras/blob/main/ROADMAP.md) ·
+[Issues upstream](https://github.com/opedrosoares/MCP_Compras/blob/main/ISSUES_UPSTREAM.md)
 
-- **claude.ai / Claude Desktop**: Settings → Connectors → Adicionar conector personalizado → cole a URL.
-- **Claude Code** — via CLI:
+## Perguntas frequentes
 
-  ```bash
-  claude mcp add --transport http compras-remoto https://SEU-PROJETO.up.railway.app/mcp
-  ```
+**Preciso saber programar?** Não, se você usa o Claude Desktop: é baixar o arquivo e dar
+duplo-clique.
 
-  Ou direto no `.mcp.json`:
+**Preciso instalar Python?** Só se quiser rodar o servidor na sua máquina. A extensão não precisa.
 
-  ```json
-  {
-    "mcpServers": {
-      "compras-remoto": {
-        "type": "http",
-        "url": "https://SEU-PROJETO.up.railway.app/mcp"
-      }
-    }
-  }
-  ```
+**Custa alguma coisa?** Não. Todas as APIs usadas são públicas e gratuitas, e o projeto é MIT.
 
-## Configuração
+**Os dados são oficiais?** Sim — vêm direto das APIs do governo, sem intermediário e sem base
+própria. Nada é inventado nem armazenado: o servidor só consulta e organiza.
 
-Estas variáveis são do **servidor** — valem para a Opção 2 (local via uv/pip) e para o seu deploy remoto. Quem instala o `.mcpb` não configura nada disso: a extensão só fala com o endpoint, e o único campo que ela expõe é a URL dele.
+**E os dados pessoais?** CPFs de servidores vêm mascarados por padrão (`123.***.***-45`), conforme
+a LGPD.
 
-| Variável | Obrigatória | Descrição |
-|----------|-------------|-----------|
-| `TRANSPARENCIA_API_KEY` | Não | Habilita as tools de sanções (CEIS, CNEP, CEPIM, CEAF, leniência). Sem ela, as demais ~90 tools (Dados Abertos, PNCP, Comprasnet, BrasilAPI) continuam funcionando normalmente. |
-| `REDIS_URL` | Não | Cache TTL compartilhado em Redis. Recomendado em produção/Railway com múltiplos pods. Sem ela, cache fica em memória local (TTL+LRU). |
-| `INCLUIR_CPF_COMPLETO` | Não | `false` (padrão): CPFs de servidores são mascarados (`123.***.***-45`). `true` retorna completo — use com critério (LGPD). |
-| `LOG_LEVEL` | Não | `DEBUG`, `INFO` (padrão), `WARNING` ou `ERROR`. |
-| `COMPRASNET_BEARER_TOKEN` | Não | Reservado para v2 (rotas autenticadas do Comprasnet Contratos via login gov.br). Sem efeito na v1. |
+**Alguma consulta voltou vazia. É bug?** Peça `compras_healthcheck` ao assistente: em ~30s ele
+testa cada API e diz qual está fora do ar. As limitações já conhecidas do upstream estão
+documentadas em
+[Qualidade das APIs públicas](https://github.com/opedrosoares/MCP_Compras/blob/main/docs/qualidade-das-apis.md).
 
-> **Dica: como obter a chave do Portal da Transparência**
->
-> Cadastro gratuito, em minutos, em <https://api.portaldatransparencia.gov.br/api-de-dados/cadastrar-email>. A chave chega por e-mail e vai direto na variável `TRANSPARENCIA_API_KEY`.
+## Contribuir
 
-Veja [.env.example](.env.example) para todas as variáveis configuráveis, incluindo TTLs de cache por domínio, timeouts HTTP e base URLs (só para testes/mocks — os padrões já apontam para produção).
-
-## Deploy remoto (Railway)
-
-O servidor detecta a env var `PORT` (injetada pelo Railway) e sobe automaticamente em modo HTTP; sem ela, sobe em stdio. Não há login por usuário — todas as APIs upstream são anônimas ou usam a chave da Transparência configurada no próprio servidor.
-
-### 1. Criar conta no Railway
-
-Acesse [railway.com](https://railway.com), clique em **Sign Up** e faça login com GitHub, GitLab ou e-mail.
-
-### 2. Instalar o Railway CLI
-
-```bash
-# macOS (Homebrew)
-brew install railway
-
-# npm (qualquer plataforma)
-npm install -g @railway/cli
-
-# Verificar
-railway --version
-```
-
-### 3. Autenticar no terminal
-
-```bash
-railway login
-```
-
-### 4. Clonar o repositório
-
-```bash
-git clone https://github.com/opedrosoares/MCP_Compras.git
-cd MCP_Compras
-```
-
-### 5. Criar o projeto no Railway
-
-```bash
-railway init -n mcp-compras
-```
-
-Se tiver mais de um workspace, adicione `--workspace "Nome do Workspace"`.
-
-### 6. Adicionar Redis (recomendado)
-
-```bash
-railway add --database redis
-```
-
-O Redis vira cache compartilhado entre instâncias — sem ele, cada pod mantém seu próprio cache em memória.
-
-### 7. Configurar variáveis de ambiente
-
-```bash
-railway variable set TRANSPARENCIA_API_KEY=sua-chave-aqui
-```
-
-`REDIS_URL` normalmente já é injetada automaticamente pelo plugin Redis do Railway (referência de outra variável do próprio projeto) — confira em `railway variables` se precisa setar manualmente.
-
-### 8. Fazer o deploy
-
-```bash
-railway up
-```
-
-Aguarde o build (Dockerfile já incluso no repo, 2-3 minutos na primeira vez).
-
-### 9. Gerar domínio público
-
-```bash
-railway domain
-```
-
-Gera uma URL como `https://mcp-compras-production.up.railway.app`.
-
-### 10. Verificar o deploy
-
-O endpoint MCP exige os headers do protocolo Streamable HTTP — uma requisição "crua" deve responder **406** (não erro de conexão), confirmando que o servidor está de pé:
-
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" -X POST https://SEU-PROJETO.up.railway.app/mcp
-# 406
-```
-
-Para uma checagem mais completa (versão, fontes upstream, chave da Transparência configurada), use a tool `compras_versao` ou `compras_healthcheck` a partir de um cliente MCP já conectado.
-
-### 11. Conectar no Claude
-
-Veja [Servidor remoto (Railway) via HTTP](#servidor-remoto-railway-via-http) acima.
-
-### Domínio customizado (opcional)
-
-```bash
-railway domain mcp.seu-orgao.gov.br
-```
-
-O comando devolve os registros DNS a configurar. Crie um CNAME no DNS do seu órgão apontando para o valor indicado; o certificado SSL é provisionado automaticamente. Para checar se a propagação/certificado já está ok:
-
-```bash
-railway domain status mcp.seu-orgao.gov.br
-```
-
-### Atualizar o servidor
-
-```bash
-git pull
-railway up
-```
-
-## Requisitos de sistema
-
-Para o `.mcpb` (Opção 1): **nada**. O Node já vem com o Claude Desktop. O que segue vale para rodar o servidor você mesmo (Opções 2 e 3):
-
-- Python ≥ 3.11
-- [uv](https://docs.astral.sh/uv/) (recomendado) ou `pip`
-- Claude Code, Claude Desktop, ou qualquer cliente MCP compatível com stdio ou Streamable HTTP
-- Redis (opcional, só para cache compartilhado em deploy com múltiplas instâncias)
-- Chave gratuita do Portal da Transparência (opcional, só para tools de sanções)
-
-Nenhuma dependência de sistema além do Python — diferente de MCPs que fazem OCR/scraping, este servidor só consome APIs REST públicas.
-
-## Tools (100 no total)
-
-Agrupadas por domínio funcional:
-
-| Domínio | Tools | Cobertura |
-|---------|-------|-----------|
-| **Compostas (agente)** | 5 | `pesquisar_precos_para_etp` (IN SEGES 65/2021 com IQR), `checar_sancoes_fornecedor`, `montar_dossie_arp`, `buscar_contratacoes_similares`, `perfil_fornecedor_completo` |
-| **Catálogo** (CATMAT/CATSER) | 8 | Grupos/classes/**PDMs**/itens; a API não busca por substring, então a navegação é hierárquica (ver aviso) |
-| **Pesquisa de preço** | 4 | Material/serviço, detalhe por compra |
-| **Planejamento** (PGC + PCA) | 8 | PGC SISG, PCA PNCP (federal + estados + municípios) |
-| **Atas de Registro de Preço** | 9 | Listar, buscar por objeto, saldo, adesões, unidades participantes, PNCP |
-| **Contratações** (14.133 + legado) | 14 | Lei 14.133 (filtros por UASG, CNPJ do órgão, UF, município, amparo legal, item de catálogo, fornecedor e faixa de valor homologado), Lei 8.666 **por item** (estimado → menor lance → homologado), RDC, dispensas |
-| **Contratos** | 15 | Dados Abertos (contrato e itens do contrato) + Comprasnet (garantias, faturas, ocorrências, fiscais, empenhos, cronograma, publicações) |
-| **Fornecedores** | 4 | Cadastro, impedimentos, contratos por item |
-| **Sanções** (Transparência/CGU) | 5 | CEIS, CNEP, CEPIM, CEAF, acordos de leniência |
-| **PNCP** | 11 | Contratações (publicação, proposta, atualização), contratos, modalidades, **arquivos de contratação e de ata** (Edital/TR/ETP e aditivos, com URL de download) |
-| **Organizações** | 6 | UASG (listar/consultar/buscar), órgãos, unidades PNCP |
-| **Indicadores** | 2 | Consolidados, por período |
-| **Analítica** | 2 | Série temporal de contratações, comparação entre períodos |
-| **Enriquecimento** | 1 | CNPJ na Receita Federal (BrasilAPI/MinhaReceita) — QSA, capital, CNAEs |
-| **Descoberta** (tools-espelho) | 4 | `listar_prompts`/`obter_prompt`/`listar_resources`/`obter_resource` — para clientes que só consomem o primitivo *tools* (ex.: Claude.ai web) |
-| **Diagnóstico** | 2 | `compras_versao`, `compras_healthcheck` |
-
-A lista completa (nome + descrição de cada tool) está em [`manifest.json`](manifest.json) ou via `tools/list` no MCP Inspector.
-
-### Fluxos típicos
-
-**ETP de aquisição de cadeiras ergonômicas:**
-
-1. `compras_catmat_buscar` com `termo="cadeira ergonomica"` → obter `codigo_item_catalogo`
-2. `compras_pesquisar_precos_para_etp` (composta) com `tipo="material"` → mediana/média/desvio + descarte IQR
-3. `compras_pgc_por_catalogo` para ver o que outros órgãos planejaram comprar
-4. `compras_arp_listar` com `apenas_vigentes=True` → atas vigentes para possível adesão
-
-**Ler a especificação técnica real por trás de um item genérico:**
-
-1. `compras_pncp_contratacoes_publicacao` (ou `compras_arp_listar`) → obter `cnpj`, `ano` e `sequencial` da compra
-2. `compras_pncp_contratacao_arquivos` → lista Edital, Termo de Referência, ETP e Projeto Básico com URL de download
-3. Baixar a `url` com um GET simples — o Edital costuma vir como ZIP (às vezes ZIP dentro de ZIP) com o TR dentro
-
-É o caminho para descobrir, por exemplo, qual GPU está de fato por trás de um CATMAT genérico de "microcomputador".
-
-**Acompanhar aditivos de uma ata de registro de preços:**
-
-1. `compras_arp_listar` → obter `numeroControlePncpAta` e o sequencial da ata dentro da compra
-2. `compras_pncp_ata_arquivos` → ata original + aditivos de reequilíbrio/prorrogação, ordenáveis por `dataPublicacaoPncp`
-
-**Análise de fornecedor antes de homologação:**
-
-1. `compras_perfil_fornecedor_completo` (composta) com o CNPJ — uma chamada devolve cadastro + sanções + contratos vigentes + dados da Receita
-
-**Inventário de contratos a renovar:**
-
-1. `compras_contratos_listar_por_fim_vigencia` com `data_fim_vigencia` próxima
-2. Para cada contrato relevante: `compras_contrato_historico_aditivos`, `compras_contrato_ocorrencias`
-
-**Antes de uma demonstração ou de instruir processo:**
-
-1. `compras_healthcheck(profundidade="rotas")` — probe real contra o upstream em ~30s, retorna `pronto_para_uso` e qual módulo está degradado/fora, se algum.
-
-## Prompts MCP (6)
-
-Diferente de tools (que o LLM invoca sozinho), prompts são selecionados pelo usuário no cliente MCP e expandem em um roteiro guiado usando as tools disponíveis. Úteis como ponto de partida para fluxos recorrentes.
-
-| Prompt | O que faz |
-|--------|-----------|
-| `analisar_contratacao_pncp` | Checklist de viabilidade de uma contratação publicada no PNCP: objeto, valor, prazos, itens críticos, riscos. |
-| `panorama_orgao_360` | Perfil 360° de um órgão: identificação, contratações do último ano, principais fornecedores, PCA do ano corrente. |
-| `dossie_due_diligence_fornecedor` | Dossiê completo de fornecedor: cadastro, sanções (CEIS/CNEP/CEPIM/CEAF + leniência), impedimentos, contratos. |
-| `oportunidades_carona_arp` | Encontra ARPs vigentes com saldo disponível para adesão (carona). |
-| `montar_etp_pesquisa_precos` | Monta a seção de pesquisa de preços de um ETP no padrão IN SEGES/ME 65/2021 (≥3 fontes, estatística, descarte IQR). |
-| `tendencia_contratacoes_periodo` | Tendência de contratações com bucketing temporal e comparação A vs. B. |
-
-Clientes que só consomem o primitivo *tools* (ex.: Claude.ai web) podem acessá-los via `compras_listar_prompts` / `compras_obter_prompt`.
-
-## Resources MCP (6)
-
-Dados de referência que o cliente lista e lê sob demanda, sem gastar uma chamada de rede:
-
-| Resource (URI) | Conteúdo |
-|----------------|----------|
-| `compras://referencia/modalidades-pncp` | Códigos de modalidade de contratação aceitos pelo PNCP |
-| `compras://referencia/esferas-federativas` | Códigos de esfera (F/E/M/D) usados no filtro `esfera` das listagens |
-| `compras://referencia/criterios-julgamento` | Critérios de julgamento do art. 33 da Lei 14.133/2021 |
-| `compras://referencia/situacoes-contratacao` | Códigos de `situacaoCompraId` do PNCP |
-| `compras://glossario/lei-14133` | Cheat-sheet de ETP, TR, modalidades, SRP, sanções, catálogos e formatos de data |
-| `compras://meta/escopo` | O que o servidor expõe, o que faz além de consultar, e o que explicitamente não faz |
-
-Clientes que só consomem o primitivo *tools* podem acessá-los via `compras_listar_resources` / `compras_obter_resource`.
-
-## Padrões internos
-
-- **Envelope padrão** das tools `listar_*`: `{resultado, _pagina_atual, _total_paginas, _total_registros, _proxima_pagina, _cache_hit, _latency_ms}`.
-- **SSoT de descriptions**: descrições de parâmetros vivem em [`src/compras_mcp/schemas.py`](src/compras_mcp/schemas.py); tools leem via `_helpers.desc(Model, "campo")`. Teste em [`tests/test_server.py`](tests/test_server.py) detecta drift.
-- **LGPD**: CPFs mascarados como `123.***.***-45`; ajuste com `INCLUIR_CPF_COMPLETO=true`. Tools afetadas incluem `_aviso_lgpd` no payload.
-- **Cache**: TTL+LRU em memória (default) ou Redis quando `REDIS_URL` setada. Cada domínio tem seu prefixo (CATALOGO, PRECOS, ATAS, ORGAOS, SANCOES, COMPOSTAS etc.) — ajustáveis via `CACHE_<PREFIX>_TTL` e `CACHE_<PREFIX>_MAX_SIZE`.
-- **Datas**: 3 formatos por API (`YYYY-MM-DD`, `yyyyMMdd`, `YYYY-MM-DD HH:mm:ss`) convertidos transparentemente por `format_date(value, flavor)`.
-- **Framework**: FastMCP 2.x. Transporte detectado por `PORT` — presente → HTTP em `0.0.0.0:$PORT`, ausente → stdio.
-
-## Links
-
-- [Changelog](CHANGELOG.md) — cada release documenta a causa raiz encontrada, não só o sintoma
-- [Roadmap](ROADMAP.md)
-- [Issues upstream conhecidas](ISSUES_UPSTREAM.md) — bugs reportáveis aos mantenedores da SEGES/CGU
-- [Repositório](https://github.com/opedrosoares/MCP_Compras)
-- [Dados Abertos Compras — Swagger](https://dadosabertos.compras.gov.br/swagger-ui/index.html)
-- [PNCP Consulta — Swagger](https://pncp.gov.br/api/consulta/swagger-ui/index.html)
-- [Portal da Transparência — Swagger](https://api.portaldatransparencia.gov.br/swagger-ui/index.html)
+Issues e pull requests são bem-vindos. Bugs que estão do lado das APIs do governo — e não deste
+servidor — ficam catalogados, com reprodução, em
+[`ISSUES_UPSTREAM.md`](https://github.com/opedrosoares/MCP_Compras/blob/main/ISSUES_UPSTREAM.md),
+prontos para envio aos órgãos mantenedores.
 
 ## Licença
 
@@ -455,7 +111,9 @@ MIT — veja [LICENSE](LICENSE).
 
 ## Status
 
-v0.3.17 — 100 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas local — ver [Changelog](CHANGELOG.md).
+**v0.4.0** — 100 tools + 6 prompts + 6 resources, em produção (Railway + Redis). Cada release
+recente foi validada em bateria de testes ponta a ponta contra o ambiente de produção, não apenas
+local — ver [Changelog](https://github.com/opedrosoares/MCP_Compras/blob/main/CHANGELOG.md).
 
 <!-- Prova de propriedade do MCP Registry oficial: o validador procura este
      token na long_description publicada no PyPI. Não remover. -->
